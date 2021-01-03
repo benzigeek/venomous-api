@@ -1,0 +1,10 @@
+{
+  "port": 3005,
+  "postgres": {
+    "host": "localhost",
+    "port": 5432,
+    "username": null,
+    "password": null,
+    "database": "venomous"
+  }
+}
