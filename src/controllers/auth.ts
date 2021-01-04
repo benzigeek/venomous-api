@@ -5,6 +5,10 @@ import argon2 from 'argon2';
 import intformat from 'biguint-format';
 import FlakeId from 'flake-idgen';
 import User from '../models/user';
+import config from 'config';
+import AuthToken from '../models/authtokens';
+import RefreshToken from '../models/refreahtokens';
+import jwt from 'jsonwebtoken';
 
 export default () => {
 
@@ -39,7 +43,39 @@ export default () => {
 
       await newUser.save();
 
-      return res.status(200).json({"statusCode":200,"message":"boop"});
+      const token = jwt.sign({
+        uid: newUser.uid
+      }, config.get("secret"), {
+        expiresIn: 25200
+      });
+
+      const newAuthToken = new AuthToken({
+        token 
+      });
+
+      await newAuthToken.save();
+
+      const refresh = jwt.sign({
+        uid: newUser.uid
+      }, config.get("secret2"), {
+        expiresIn: 31556952
+      });
+
+      const newRefresh = new RefreshToken({
+        token: refresh
+      });
+
+      await newRefresh.save();
+
+      var dt = new Date();
+      dt.setMinutes( dt.getMinutes() + 420 );
+
+      return res.status(200).json({
+        "statusCode": 200,
+        "auth_token": token,
+        "refresh_token": refresh,
+        "expires": dt.getTime()
+      });
 
     } catch (err) {
       logger("error", "Mongo Database", err);

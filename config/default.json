@@ -1,4 +1,6 @@
 {
   "port": 3005,
-  "mongo": null
+  "mongo": null,
+  "secret": "slkjdkljhlkdj",
+  "secret2": "skiohjsjdhnkljdhzslkjhdaskjh"
 }

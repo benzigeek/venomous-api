@@ -1,9 +1,0 @@
-CREATE TABLE users (
-  id TEXT PRIMARY KEY NOT NULL,
-  email TEXT NOT NULL,
-  username TEXT NOT NULL,
-  hash TEXT NOT NULL,
-  pfp TEXT DEFAULT NULL,
-  banner TEXT DEFAULT NULL,
-  bio TEXT DEFAULT NULL
-);

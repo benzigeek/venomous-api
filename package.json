@@ -23,6 +23,7 @@
     "@types/config": "0.0.37",
     "@types/express": "^4.17.9",
     "@types/helmet": "^4.0.0",
+    "@types/jsonwebtoken": "^8.5.0",
     "@types/mongoose": "^5.10.3",
     "argon2": "^0.27.1",
     "biguint-format": "^1.0.2",
