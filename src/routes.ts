@@ -7,7 +7,7 @@ let router = express();
 const initDB = async () => {
  
   const db = await DB();
-  router.use("/auth", Auth(db));
+  router.use("/auth", Auth());
   
 }
 

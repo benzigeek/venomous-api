@@ -1,6 +1,3 @@
 {
-  "postgres": {
-    "username": "DB_USERNAME",
-    "password": "DB_PASSWORD"
-  }
+  "mongo": "MONGO_URI"
 }

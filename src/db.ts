@@ -1,24 +1,14 @@
-import { Client } from 'pg';
+import mongoose from 'mongoose';
 import logger from 'jethro';
 import config from 'config';
 
-export default async (): Promise<Client>  => {
+export default async ()  => {
 
   try {
     
-    const client = new Client({
-      host: config.get("postgres.host"),
-      port: config.get("postgres.port"),
-      database: config.get("postgres.database"),
-      user: config.get("postgres.username"),
-      password: config.get("postgres.password")
-    });
+    await mongoose.connect(config.get("mongo"), {useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true});
 
-    await client.connect();
-
-    logger("success", "Postgres", "Successfully connected to Postgresql database");
-
-    return client;
+    logger("success", "Mongo Database", "Successfully connected to database...");
 
   } catch (err) {
     logger("error", "Postgres", err);

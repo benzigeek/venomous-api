@@ -1,12 +1,12 @@
 import { Router } from 'express';
-import { Client } from 'pg';
 import Joi from 'joi';
 import logger from 'jethro';
-import argon2, { argon2id } from 'argon2';
+import argon2 from 'argon2';
 import intformat from 'biguint-format';
 import FlakeId from 'flake-idgen';
+import User from '../models/user';
 
-export default (db:Client) => {
+export default () => {
 
   const api = Router();
 
@@ -18,28 +18,31 @@ export default (db:Client) => {
 
     try {
 
-      const response = await db.query("SELECT * FROM users WHERE users.email = $1", [req.body.email]);
+      const user = await User.findOne({"email":req.body.email});
 
-      if (response.rows[0]) return res.status(400).json({"statusCode":400,"error":"Email already used"});
+      if (user) return res.status(400).json({"statusCode":400,"error":"Email already used"});
 
-      const response2 = await db.query("SELECT * FROM users WHERE users.username = $1", [req.body.username]);
+      const user2 = await User.findOne({"username":req.body.username});
 
-      if (response2.rows[0]) return res.status(400).json({"statusCode":400,"error":"Username already used"});
+      if (user2) return res.status(400).json({"statusCode":400,"error":"Username taken"});
 
-      const FlakeGen = new FlakeId();
+      const hash = await argon2.hash(req.body.password, {type: argon2.argon2id, saltLength: 60});
 
-      const id = intformat(FlakeGen.next(), 'dec');
+      let flakeIdGen1 = new FlakeId();
 
-      const hash = await argon2.hash(req.body.email, {type: argon2id, saltLength: 45});
+      const newUser = new User({
+        email: req.body.email,
+        username: req.body.username,
+        uid: intformat(flakeIdGen1.next(), 'dec'),
+        hash
+      });
 
-      logger("debug", "test", parseInt(id));
+      await newUser.save();
 
-      await db.query("INSERT INTO users (id,username,email,hash) VALUES ($1,$2,$3,$4);", [id, req.body.username, req.body.email, hash]);
-
-      return res.status(200).json({"statusCode":200,"message":"successfully created user"});
+      return res.status(200).json({"statusCode":200,"message":"boop"});
 
     } catch (err) {
-      logger("error", "Postgres", err);
+      logger("error", "Mongo Database", err);
     }
 
   });
