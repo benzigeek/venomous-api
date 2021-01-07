@@ -7,24 +7,22 @@ interface IApplication extends mongoose.Document {
   name: string,
   description: string,
   secret: string,
-  id: string
+  client_id: string
 }
 
 interface IApplicationOwner {
-  uid: string,
-  username: string
+  uid: string
 }
 
 const Application = new Schema({
   owner: {
-    uid: {type: String, required: true},
-    username: {type: String, required: true}
+    uid: {type: String, required: true}
   },
   img: {type: String, default: null},
   name: {type: String, required: true},
   description: {type: String, required: true},
   secret: {type: String, required: true},
-  id: {type: String, required: true},
+  client_id: {type: String, required: true},
   redirect_uris: [{
     type: String,
     required: true
