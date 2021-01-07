@@ -1,19 +1,39 @@
-import { Router } from 'express';
+/*
+
+ __      __                                         
+ \ \    / /                                         
+  \ \  / /__ _ __   ___  _ __ ___   ___  _   _ ___  
+   \ \/ / _ \ '_ \ / _ \| '_ ` _ \ / _ \| | | / __| 
+    \  /  __/ | | | (_) | | | | | | (_) | |_| \__ \ 
+     \/ \___|_| |_|\___/|_| |_| |_|\___/ \__,_|___/ 
+                                                    
+* Author: BenziDev
+* Website: https://venomous.gg
+* Copyright (c) 2021 Venomous Technologies, Inc. All Rights Reserved.                                  
+*/
+
+// import thirdparty packages
+import { response, Router } from 'express';
 import Joi from 'joi';
 import logger from 'jethro';
 import argon2 from 'argon2';
 import intformat from 'biguint-format';
 import FlakeId from 'flake-idgen';
+import Utils from '../utils';
+
+// import models
 import User from '../models/user';
 import AuthToken from '../models/authtokens';
 import RefreshToken from '../models/refreahtokens';
+
+// import middleware
 import { authenticate } from '../middleware';
-import Utils from '../utils';
 
 export default () => {
 
   const api = Router();
 
+  // register endpoint - POST "/v1/auth/register"
   api.post("/register", async (req, res) => {
 
     const {error} = registerSchema.validate(req.body);
@@ -80,6 +100,7 @@ export default () => {
 
   });
 
+  // login endpoint - POST "/v1/auth/login"
   api.post("/login", async (req, res) => {
 
     const {error} = loginSchema.validate(req.body);
@@ -139,13 +160,67 @@ export default () => {
 
   });
 
+  // refresh endpoint - POST "/v1/auth/refresh"
+  api.post("/refresh", async (req, res) => {
+
+    const {error} = refreshSchema.validate(req.body);
+
+    if (error) return res.status(400).json({"statusCode": 400, "error": error.details[0].message});
+
+    try {
+
+      const token = await RefreshToken.findOne({token: req.body.refresh_token});
+
+      if (!token) return res.status(400).json({"statusCode":400,"error":"Invalid token"});
+
+      await RefreshToken.deleteOne({token: req.body.refresh_token});
+
+      const token2 = await Utils.generateToken();
+
+        const newToken = new AuthToken({
+          uid: token.uid,
+          token: token2,
+          grant_type: "password"
+        });
+
+        await newToken.save();
+
+        const refreshToken = await Utils.generateToken();
+
+        const newRefreshToken = new RefreshToken({
+          uid: token.uid,
+          token: refreshToken,
+          grant_type: "password"
+        });
+
+        await newRefreshToken.save();
+
+        let dt = new Date();
+        dt.setMinutes( dt.getMinutes() + 420 );
+
+        return res.status(200).json({
+          "statusCode": 200,
+          "access_token": token2,
+          "refresh_token": refreshToken,
+          "token_type": "Bearer",
+          "expires": dt.getTime()
+        });
+
+    } catch (err) {
+
+      logger("debug", "Auth", err);
+      res.status(500).json({"statusCode":500,"error":"Internal server error"});
+
+    }
+
+  });
+
+  // logout endpoint - GET "/v1/auth/logout"
   api.get("/logout", authenticate, async (req:any, res) => {
 
     try {
 
-      await AuthToken.deleteMany({uid: req.uid, grant_type: "password"});
-
-      await RefreshToken.deleteMany({uid: req.uid, grant_type: "password"});
+      await AuthToken.deleteOne({token: req.token});
 
       res.status(200).json({"statusCode":200,"message":"Successfully Logged Out"});
 
@@ -172,4 +247,9 @@ const registerSchema = Joi.object({
 const loginSchema = Joi.object({
   email: Joi.string().required().email(),
   password: Joi.string().required()
+});
+
+// refresh request validation schema
+const refreshSchema = Joi.object({
+  refresh_token: Joi.string().required()
 });
