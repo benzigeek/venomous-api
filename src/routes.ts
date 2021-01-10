@@ -14,7 +14,10 @@
 
 import express from 'express';
 import DB from './db';
+
+// import controllers
 import Auth from './controllers/auth';
+import Users from './controllers/users';
 
 let router = express();
 
@@ -22,6 +25,7 @@ const initDB = async () => {
  
   const db = await DB();
   router.use("/auth", Auth());
+  router.use("/users", Users());
   
 }
 

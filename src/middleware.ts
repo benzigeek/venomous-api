@@ -28,7 +28,7 @@ const authenticate = async (req, res, next) => {
 
       if (!Token) return res.status(401).json({"statusCode":401,"error":"Unauthorized"});
 
-      req.id = Token.iid;
+      req.id = Token.id;
 
       req.token = token;
 
