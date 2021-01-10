@@ -121,7 +121,7 @@ export default () => {
         const token = await Utils.generateToken();
 
         const newToken = new AuthToken({
-          id: user.uid,
+          id: user.id,
           token,
           grant_type: "password"
         });
@@ -131,7 +131,7 @@ export default () => {
         const refreshToken = await Utils.generateToken();
 
         const newRefreshToken = new RefreshToken({
-          id: user.uid,
+          id: user.id,
           token: refreshToken,
           grant_type: "password"
         });
@@ -157,6 +157,8 @@ export default () => {
 
     } catch (err) {
 
+      console.log(err);
+
       res.status(500).json({"statusCode":500,"error":"Internal server error"});
 
     }
@@ -181,7 +183,7 @@ export default () => {
       const token2 = await Utils.generateToken();
 
         const newToken = new AuthToken({
-          id: token.uid,
+          id: token.id,
           token: token2,
           grant_type: "password"
         });
@@ -191,7 +193,7 @@ export default () => {
         const refreshToken = await Utils.generateToken();
 
         const newRefreshToken = new RefreshToken({
-          id: token.uid,
+          id: token.id,
           token: refreshToken,
           grant_type: "password"
         });
