@@ -16,6 +16,7 @@ import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
 interface IChannel extends mongoose.Document {
+  id: string,
   name: string,
   owner: IChannelOwner,
   stream_key: string,
@@ -34,8 +35,9 @@ interface IChannelOwner {
 
 const Channel = new Schema({
   name: {type: String, required: true},
+  id: {type: String, required: true},
   owner: {
-    uid: {type: String, required: true},
+    id: {type: String, required: true},
     username: {type: String, required: true}
   },
   stream_key: {type: String, required: true},

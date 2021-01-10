@@ -19,13 +19,23 @@ const randomBytes = bluebird.promisify(crypto.randomBytes);
 
 class Utils {
 
-  async generateToken() {
+  async generateToken(): Promise<string> {
     return randomBytes(256).then((buffer) => {
       return crypto
         .createHash('sha1')
         .update(buffer)
         .digest('hex');
     });
+  }
+
+  async generateStreamKey(): Promise<string> {
+
+    return randomBytes(500).then((buffer) => {
+      return crypto.createHash('sha1')
+      .update(buffer)
+      .digest('hex');
+    });
+
   }
 
 }

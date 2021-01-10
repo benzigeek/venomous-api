@@ -18,13 +18,13 @@ const Schema = mongoose.Schema;
 interface IChannelMod extends mongoose.Document {
   username: string,
   channel: string,
-  uid: string
+  id: string
 }
 
 const ChannelMod = new Schema({
   username: {type: String, required: true},
   channel: {type: String, required: true},
-  uid: {type: String, re4quired: true}
+  id: {type: String, re4quired: true}
 });
 
 export default mongoose.model<IChannelMod>("channelmods", ChannelMod);

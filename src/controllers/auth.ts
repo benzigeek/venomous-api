@@ -13,7 +13,7 @@
 */
 
 // import thirdparty packages
-import { response, Router } from 'express';
+import { Router } from 'express';
 import Joi from 'joi';
 import logger from 'jethro';
 import argon2 from 'argon2';
@@ -25,6 +25,7 @@ import Utils from '../utils';
 import User from '../models/user';
 import AuthToken from '../models/authtokens';
 import RefreshToken from '../models/refreahtokens';
+import Channel from '../models/channel';
 
 // import middleware
 import { authenticate } from '../middleware';
@@ -52,21 +53,23 @@ export default () => {
 
       const hash = await argon2.hash(req.body.password, {type: argon2.argon2id, saltLength: 60});
 
-      let flakeIdGen1 = new FlakeId();
+      let flakeIdGen1 = new FlakeId({worker: 1});
 
       const newUser = new User({
         email: req.body.email,
         username: req.body.username,
-        uid: intformat(flakeIdGen1.next(), 'dec'),
+        id: intformat(flakeIdGen1.next(), 'dec'),
         hash
       });
 
       await newUser.save();
 
+      await createChannel(newUser.id, newUser.username);
+
       const token = await Utils.generateToken();
 
       const newToken = new AuthToken({
-        uid: newUser.uid,
+        id: newUser.id,
         token,
         grant_type: "password"
       });
@@ -76,7 +79,7 @@ export default () => {
       const refreshToken = await Utils.generateToken();
 
       const newRefreshToken = new RefreshToken({
-        uid: newUser.uid,
+        id: newUser.id,
         token: refreshToken,
         grant_type: "password"
       });
@@ -118,7 +121,7 @@ export default () => {
         const token = await Utils.generateToken();
 
         const newToken = new AuthToken({
-          uid: user.uid,
+          id: user.uid,
           token,
           grant_type: "password"
         });
@@ -128,7 +131,7 @@ export default () => {
         const refreshToken = await Utils.generateToken();
 
         const newRefreshToken = new RefreshToken({
-          uid: user.uid,
+          id: user.uid,
           token: refreshToken,
           grant_type: "password"
         });
@@ -178,7 +181,7 @@ export default () => {
       const token2 = await Utils.generateToken();
 
         const newToken = new AuthToken({
-          uid: token.uid,
+          id: token.uid,
           token: token2,
           grant_type: "password"
         });
@@ -188,7 +191,7 @@ export default () => {
         const refreshToken = await Utils.generateToken();
 
         const newRefreshToken = new RefreshToken({
-          uid: token.uid,
+          id: token.uid,
           token: refreshToken,
           grant_type: "password"
         });
@@ -235,6 +238,35 @@ export default () => {
   return api;
 
 }
+
+// create channnel object in db
+const createChannel = async (id:string, username:string) => {
+  
+  try {
+
+    const skey = await Utils.generateStreamKey();
+
+    let flakeIdGen2 = new FlakeId({worker: 2});
+    
+    const newChannel = new Channel({
+      id: intformat(flakeIdGen2.next(), 'dec'),
+      name: username,
+      owner: {
+        username: username,
+        id: id
+      },
+      stream_key: skey 
+    });
+
+    await newChannel.save();
+
+    return true;
+
+  } catch (err) {
+    throw err;
+  }
+
+};
 
 // register request validation schema
 const registerSchema = Joi.object({

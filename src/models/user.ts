@@ -16,7 +16,7 @@ import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
 interface IUser extends mongoose.Document {
-  uid: string,
+  id: string,
   email: string,
   username: string,
   hash: string,
@@ -25,7 +25,7 @@ interface IUser extends mongoose.Document {
 }
 
 const User = new Schema({
-  uid: {type: String, required: true},
+  id: {type: String, required: true},
   username: {type: String, required: true},
   email: {type: String, required: true},
   hash: {type: String, required: true},
