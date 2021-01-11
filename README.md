@@ -1,2 +1,2 @@
 # venomous-api
-Venomous's RESTful API with express &amp; postgresql
+Venomous's RESTful API with express &amp; mongodb
