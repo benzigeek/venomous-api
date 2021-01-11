@@ -28,6 +28,7 @@
     "@types/jsonwebtoken": "^8.5.0",
     "@types/lodash": "^4.14.167",
     "@types/mongoose": "^5.10.3",
+    "@types/nodemailer": "^6.4.0",
     "argon2": "^0.27.1",
     "biguint-format": "^1.0.2",
     "bluebird": "^3.7.2",
@@ -42,7 +43,8 @@
     "joi": "^17.3.0",
     "jsonwebtoken": "^8.5.1",
     "lodash": "^4.17.20",
-    "mongoose": "^5.11.9"
+    "mongoose": "^5.11.9",
+    "nodemailer": "^6.4.17"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^4.11.1",

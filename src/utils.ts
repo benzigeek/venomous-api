@@ -19,6 +19,7 @@ const randomBytes = bluebird.promisify(crypto.randomBytes);
 
 class Utils {
 
+  // generate refresh & access tokens
   async generateToken(): Promise<string> {
     return randomBytes(256).then((buffer) => {
       return crypto
@@ -28,9 +29,21 @@ class Utils {
     });
   }
 
+  // generate stream key
   async generateStreamKey(): Promise<string> {
 
     return randomBytes(500).then((buffer) => {
+      return crypto.createHash('sha1')
+      .update(buffer)
+      .digest('hex');
+    });
+
+  }
+
+  // generate verify codes
+  async generateVerifyCode(): Promise<string> {
+
+    return randomBytes(300).then((buffer) => {
       return crypto.createHash('sha1')
       .update(buffer)
       .digest('hex');

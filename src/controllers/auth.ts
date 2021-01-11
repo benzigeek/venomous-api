@@ -13,19 +13,22 @@
 */
 
 // import thirdparty packages
-import { Router } from 'express';
+import { response, Router } from 'express';
 import Joi from 'joi';
 import logger from 'jethro';
 import argon2 from 'argon2';
 import intformat from 'biguint-format';
 import FlakeId from 'flake-idgen';
 import Utils from '../utils';
+import nodemailer from 'nodemailer';
+import config from 'config';
 
 // import models
 import User from '../models/user';
 import AuthToken from '../models/authtokens';
 import RefreshToken from '../models/refreahtokens';
 import Channel from '../models/channel';
+import VerifyCode from '../models/verifycode';
 
 // import middleware
 import { authenticate } from '../middleware';
@@ -89,6 +92,17 @@ export default () => {
       var dt = new Date();
       dt.setMinutes( dt.getMinutes() + 420 );
 
+      const code = await Utils.generateVerifyCode();
+
+      const newCode = new VerifyCode({
+        code,
+        id: newUser.id
+      });
+
+      await newCode.save();
+
+      await sendEmail(code, newUser.email);
+
       return res.status(200).json({
         "statusCode": 200,
         "access_token": token,
@@ -98,6 +112,7 @@ export default () => {
       });
 
     } catch (err) {
+      res.status(500).json({"statusCode":500,"error":"Internal Server Error"});
       logger("error", "Mongo Database", err);
     }
 
@@ -237,7 +252,65 @@ export default () => {
 
   });
 
+  // verify email endpoint - PUT "/v1/auth/verify"
+  api.put("/verify", authenticate, async (req:any, res) => {
+
+    const {error} = verifySchema.validate(req.body);
+
+    if (error) return res.status(400).json({"statusCode":400,"error":error.details[0].message});
+
+    try {
+
+      const code = await VerifyCode.findOne({code:req.body.code});
+
+      if (!code) return res.status(400).json({"statusCode":400,"error":"Invalid Code"});
+
+      await VerifyCode.deleteMany({id: req.id});
+
+      await User.updateOne({id: req.id}, {email_verifed: true});
+
+      res.status(200).json({"statusCode": 200,"message": "successfully verified email"});
+
+    } catch (err) {
+
+      res.status(500).json({"statusCode":500,"error":"Internal Server Error"});
+
+    }
+
+  });
+
   return api;
+
+}
+
+const sendEmail = async (code:string, email:string) => {
+  
+  let transporter = nodemailer.createTransport({
+    host: "mail.privateemail.com",
+    port: 465,
+    secure: true,
+    auth: {
+      user: "no-reply@venomous.gg",
+      pass: config.get("emailpass"),
+    }
+  });
+
+  try {
+
+    const info = await transporter.sendMail({
+      from: `"Venomous" <no-reply@venomous.gg>`,
+      to: email,
+      subject: "Email Verifcation",
+      text: code
+    });
+
+    return true;
+
+  } catch (err) {
+
+    throw err;
+
+  }
 
 }
 
@@ -283,4 +356,9 @@ const loginSchema = Joi.object({
 // refresh request validation schema
 const refreshSchema = Joi.object({
   refresh_token: Joi.string().required()
+});
+
+// verify request validation schema
+const verifySchema = Joi.object({
+  code: Joi.string().required()
 });

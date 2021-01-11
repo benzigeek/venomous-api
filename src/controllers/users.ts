@@ -13,7 +13,7 @@
 */
 
 // import thirdparty packages
-import e, { Router } from 'express';
+import { Router } from 'express';
 import { authenticate } from '../middleware';
 import _ from 'lodash';
 import Joi from 'joi';

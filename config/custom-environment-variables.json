@@ -1,3 +1,4 @@
 {
-  "mongo": "MONGO_URI"
+  "mongo": "MONGO_URI",
+  "emailpass": "EMAIL_PASSWORD"
 }

@@ -2,5 +2,6 @@
   "port": 3005,
   "mongo": null,
   "secret": "slkjdkljhlkdj",
-  "secret2": "skiohjsjdhnkljdhzslkjhdaskjh"
+  "secret2": "skiohjsjdhnkljdhzslkjhdaskjh",
+  "emailpass": null
 }
