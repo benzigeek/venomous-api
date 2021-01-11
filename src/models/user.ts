@@ -21,7 +21,8 @@ interface IUser extends mongoose.Document {
   username: string,
   hash: string,
   staff: boolean,
-  created: Date
+  created: Date,
+  username_time: number
 }
 
 const User = new Schema({
@@ -30,6 +31,7 @@ const User = new Schema({
   email: {type: String, required: true},
   hash: {type: String, required: true},
   staff: {type: Boolean, default: false},
+  username_time: {type: Number, default: null},
   created: {type: Date, default: new Date()}
 });
 

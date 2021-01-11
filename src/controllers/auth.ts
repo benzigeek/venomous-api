@@ -182,34 +182,34 @@ export default () => {
 
       const token2 = await Utils.generateToken();
 
-        const newToken = new AuthToken({
-          id: token.id,
-          token: token2,
-          grant_type: "password"
-        });
+      const newToken = new AuthToken({
+        id: token.id,
+        token: token2,
+        grant_type: "password"
+      });
 
-        await newToken.save();
+      await newToken.save();
 
-        const refreshToken = await Utils.generateToken();
+      const refreshToken = await Utils.generateToken();
 
-        const newRefreshToken = new RefreshToken({
-          id: token.id,
-          token: refreshToken,
-          grant_type: "password"
-        });
+      const newRefreshToken = new RefreshToken({
+        id: token.id,
+        token: refreshToken,
+        grant_type: "password"
+      });
 
-        await newRefreshToken.save();
+      await newRefreshToken.save();
 
-        let dt = new Date();
-        dt.setMinutes( dt.getMinutes() + 420 );
+      let dt = new Date();
+      dt.setMinutes( dt.getMinutes() + 420 );
 
-        return res.status(200).json({
-          "statusCode": 200,
-          "access_token": token2,
-          "refresh_token": refreshToken,
-          "token_type": "Bearer",
-          "expires": dt.getTime()
-        });
+      return res.status(200).json({
+        "statusCode": 200,
+        "access_token": token2,
+        "refresh_token": refreshToken,
+        "token_type": "Bearer",
+        "expires": dt.getTime()
+      });
 
     } catch (err) {
 
@@ -253,10 +253,7 @@ const createChannel = async (id:string, username:string) => {
     const newChannel = new Channel({
       id: intformat(flakeIdGen2.next(), 'dec'),
       name: username,
-      owner: {
-        username: username,
-        id: id
-      },
+      owner: id,
       stream_key: skey 
     });
 

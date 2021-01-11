@@ -18,7 +18,7 @@ const Schema = mongoose.Schema;
 interface IChannel extends mongoose.Document {
   id: string,
   name: string,
-  owner: IChannelOwner,
+  owner: IUser,
   stream_key: string,
   offline_screen: string,
   channel_meta_img: string,
@@ -28,7 +28,7 @@ interface IChannel extends mongoose.Document {
   current_game: string
 }
 
-interface IChannelOwner {
+interface IUser {
   id: string,
   username: string
 }
@@ -37,8 +37,8 @@ const Channel = new Schema({
   name: {type: String, required: true},
   id: {type: String, required: true},
   owner: {
-    id: {type: String, required: true},
-    username: {type: String, required: true}
+    type: String,
+    ref: 'User'
   },
   stream_key: {type: String, required: true},
   offline_screen: {type: String, default: null},
