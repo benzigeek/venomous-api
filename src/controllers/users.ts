@@ -21,15 +21,19 @@ import argon2 from 'argon2';
 import AuthToken from '../models/authtokens';
 import RefreshToken from '../models/refreahtokens';
 import Utils from '../utils';
+import nodemailer from 'nodemailer';
+import config from 'config';
+import logger from 'jethro';
 
 // import models
 import User from '../models/user';
+import VerifyCode from '../models/verifycode';
 
 export default () => {
 
   const api = Router();
 
-  // get current users object - GET "/v1/users/@me"
+  // get current users object endpoint - GET "/v1/users/@me"
   api.get("/@me", authenticate, async (req:any, res) => {
 
     try {
@@ -38,7 +42,7 @@ export default () => {
 
       if (req.grant_type == "password") {
 
-        const data = _.pick(user, ["id", "email", "username", "staff", "created"]);
+        const data = _.pick(user, ["id", "email", "email_verifed", "username", "staff", "created", "username_time"]);
 
         res.status(200).json({"statusCode":200,"data": data});
 
@@ -153,7 +157,7 @@ export default () => {
 
   });
 
-  // change password - PUT "/v1/users/@me/edit/password"
+  // change password endpoint - PUT "/v1/users/@me/edit/password"
   api.put("/@me/edit/password", authenticate, async (req:any, res) => {
 
     const {error} = editPasswordSchema.validate(req.body);
@@ -229,8 +233,113 @@ export default () => {
 
   });
 
+  // update email endpoint - PUT "/v1/users/@me/edit/email"
+  api.put("/@me/edit/email", authenticate, async (req:any, res) => {
+
+    if (req.grant_type == "password") {
+
+      const {error} = updateEmailSchema.validate(req.body);
+
+      if (error) return res.status(400).json({"statusCode":400,"error":error.details[0].message});
+
+      try {
+
+        const user = await User.findOne({email: req.body.new_email});
+
+        if (user) return res.status(400).json({"statusCode":400,"error":"Email Already Used"});
+
+        const user2 = await User.findOne({id: req.id});
+
+        if (await argon2.verify(user2.hash, req.body.current_password)) {
+
+          user2.email = req.body.new_email;
+
+          user2.email_verified = false;
+
+          await user2.save();
+
+          const code = await Utils.generateVerifyCode();
+
+          const newCode = new VerifyCode({
+            code,
+            id: user2.id
+          });
+
+          await newCode.save();
+
+          res.status(200).json({"statusCode":200,"message":"Successfully changed email"});
+
+          await sendEmail(code, req.body.new_email);
+
+        } else {
+
+          res.status(400).json({"statusCode":400,"error":"Invalid Password"});
+
+        }
+
+      } catch (err) {
+
+        console.log(err);
+
+        res.status(500).json({"statusCode":500,"error":"Internal Server Error"});
+
+      }
+
+    } else {
+
+      res.status(403).json({"statusCode":403,"error":"Forbidden"});
+
+    }
+
+  });
 
   return api;
+
+}
+
+const sendEmail = async (code:string, email:string) => {
+  
+  let transporter = nodemailer.createTransport({
+    host: "mail.privateemail.com",
+    port: 465,
+    secure: true,
+    auth: {
+      user: "no-reply@venomous.gg",
+      pass: config.get("emailpass"),
+    }
+  });
+
+  try {
+
+    const info = await transporter.sendMail({
+      from: `"Venomous" <no-reply@venomous.gg>`,
+      to: email,
+      subject: "Email Verifcation",
+      text: code
+    });
+
+    return true;
+
+  } catch (err) {
+
+    try {
+
+      const info = await transporter.sendMail({
+        from: `"Venomous" <no-reply@venomous.gg>`,
+        to: email,
+        subject: "Email Verifcation",
+        text: code
+      });
+  
+      return true;
+
+    } catch (err) {
+
+      return false;
+
+    }
+
+  }
 
 }
 
@@ -244,4 +353,10 @@ const editUsernameSchema = Joi.object({
 const editPasswordSchema = Joi.object({
   current_password: Joi.string().required(),
   new_password: Joi.string().min(6).max(40).required() 
+});
+
+// update email request schema
+const updateEmailSchema = Joi.object({
+  current_password: Joi.string().required(),
+  new_email: Joi.string().required().email()
 });

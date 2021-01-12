@@ -101,15 +101,15 @@ export default () => {
 
       await newCode.save();
 
-      await sendEmail(code, newUser.email);
-
-      return res.status(200).json({
+      res.status(200).json({
         "statusCode": 200,
         "access_token": token,
         "refresh_token": refreshToken,
         "token_type": "Bearer",
         "expires": dt.getTime()
       });
+
+      await sendEmail(code, newUser.email);
 
     } catch (err) {
       res.status(500).json({"statusCode":500,"error":"Internal Server Error"});
@@ -308,7 +308,22 @@ const sendEmail = async (code:string, email:string) => {
 
   } catch (err) {
 
-    throw err;
+    try {
+
+      const info = await transporter.sendMail({
+        from: `"Venomous" <no-reply@venomous.gg>`,
+        to: email,
+        subject: "Email Verifcation",
+        text: code
+      });
+  
+      return true;
+
+    } catch (err) {
+
+      return false;
+
+    }
 
   }
 
