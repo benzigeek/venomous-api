@@ -36,10 +36,6 @@ interface IUser {
 const Channel = new Schema({
   name: {type: String, required: true},
   id: {type: String, required: true},
-  owner: {
-    type: String,
-    ref: 'User'
-  },
   stream_key: {type: String, required: true},
   offline_screen: {type: String, default: null},
   channel_meta_img: {type: String, default: null},
@@ -49,6 +45,12 @@ const Channel = new Schema({
   current_game: {type: String, default: null},
   channel_img: {type: String, default: null},
   cahnnel_banner: {type: String, default: null}
+});
+
+Channel.virtual('owner', {
+  ref: 'users',
+  localField: 'owner',
+  foreignField: 'id'
 });
 
 export default mongoose.model<IChannel>("channels", Channel);

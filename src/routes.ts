@@ -18,6 +18,7 @@ import DB from './db';
 // import controllers
 import Auth from './controllers/auth';
 import Users from './controllers/users';
+import Channels from './controllers/channels';
 
 let router = express();
 
@@ -26,6 +27,7 @@ const initDB = async () => {
   const db = await DB();
   router.use("/auth", Auth());
   router.use("/users", Users());
+  router.use("/cahnnels", Channels());
   
 }
 
