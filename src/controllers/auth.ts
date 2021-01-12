@@ -235,6 +235,42 @@ export default () => {
 
   });
 
+  // resend email endpoint - POST "/v1/auth/resend"
+  api.post("/resend", authenticate, async (req:any, res) => {
+
+    if (req.grant_type == "password") {
+
+      try {
+
+        const user = await User.findOne({id: req.id});
+  
+        const code = await Utils.generateVerifyCode();
+  
+        const newCode = new VerifyCode({
+          code,
+          id: user.id
+        });
+  
+        await newCode.save();
+  
+        res.status(200).json({"statusCode":200,"message":"Sent Email"});
+  
+        await sendEmail(code, user.email);
+  
+      } catch (err) {
+  
+        res.status(500).json({"statusCode":500,"error":"Internal Server Error"});
+  
+      }
+
+    } else {
+
+      res.status(403).json({"statusCode":403,"error":"Forbidden"});
+
+    }
+
+  });
+
   // logout endpoint - GET "/v1/auth/logout"
   api.get("/logout", authenticate, async (req:any, res) => {
 
