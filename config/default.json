@@ -1,7 +1,6 @@
 {
   "port": 3005,
   "mongo": null,
-  "secret": "slkjdkljhlkdj",
-  "secret2": "skiohjsjdhnkljdhzslkjhdaskjh",
-  "emailpass": null
+  "emailpass": null,
+  "emailusername": "no-reply@venomous.gg"
 }

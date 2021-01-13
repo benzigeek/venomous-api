@@ -7,9 +7,9 @@
     \  /  __/ | | | (_) | | | | | | (_) | |_| \__ \ 
      \/ \___|_| |_|\___/|_| |_| |_|\___/ \__,_|___/ 
                                                     
-* Author: BenziDev
-* Website: https://venomous.gg
-* Copyright (c) 2021 Venomous Technologies, Inc. All Rights Reserved.                                  
+* Author: benzigeek
+* Repo: github.com/benzigeek/venomous-api
+* Copyright (c) 2021 Jordan (benzigeek)
 */
 
 // import thirdparty packages
