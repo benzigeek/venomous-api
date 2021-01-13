@@ -29,7 +29,6 @@ interface IUser extends mongoose.Document {
 }
 
 const User = new Schema({
-  id: {type: String, required: true},
   username: {type: String, required: true},
   email: {type: String, required: true},
   hash: {type: String, required: true},
@@ -39,6 +38,16 @@ const User = new Schema({
   email_verifed: {type: Boolean, default: false},
   two_factor: {type: Boolean, default: false},
   two_factor_secret: {type: String, default: null}
+});
+
+User.method("toClient", () => {
+  
+  // @ts-ignore
+  let obj = this.toObject();
+
+  obj.id = obj._id;
+  delete obj._id; 
+  
 });
 
 export default mongoose.model<IUser>("users", User);

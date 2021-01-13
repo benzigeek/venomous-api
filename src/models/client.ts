@@ -36,11 +36,20 @@ const Application = new Schema({
   name: {type: String, required: true},
   description: {type: String, required: true},
   secret: {type: String, required: true},
-  client_id: {type: String, required: true},
   redirect_uris: [{
     type: String,
     required: true
   }]
+});
+
+Application.method("toClient", () => {
+  
+  // @ts-ignore
+  let obj = this.toObject();
+
+  obj.id = obj._id;
+  delete obj._id; 
+  
 });
 
 export default mongoose.model<IApplication>("applications", Application);

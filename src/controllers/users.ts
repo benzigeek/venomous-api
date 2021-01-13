@@ -39,9 +39,11 @@ export default () => {
 
     try {
 
-      const user = await User.findOne({id: req.id});
+      const user = await User.findOne({_id: req.id});
 
       if (req.grant_type == "password") {
+
+        console.log(user);
 
         const data = _.pick(user, ["id", "email", "email_verifed", "username", "staff", "created", "username_time"]);
 
@@ -104,7 +106,7 @@ export default () => {
 
         if (error) return res.status(400).json({"statusCode":400,"error":error.details[0].message});
 
-        const user = await User.findOne({id: req.id});
+        const user = await User.findOne({_id: req.id});
 
         if (await argon2.verify(user.hash, req.body.password)) {
 
@@ -166,7 +168,7 @@ export default () => {
 
     if (req.grant_type == "password") {
       
-      const user = await User.findOne({id:req.id});
+      const user = await User.findOne({_id:req.id});
 
       if (await argon2.verify(user.hash, req.body.current_password)) {
 
@@ -248,7 +250,7 @@ export default () => {
 
         if (user) return res.status(400).json({"statusCode":400,"error":"Email Already Used"});
 
-        const user2 = await User.findOne({id: req.id});
+        const user2 = await User.findOne({_id: req.id});
 
         if (await argon2.verify(user2.hash, req.body.current_password)) {
 
@@ -300,9 +302,9 @@ export default () => {
 
       try {
 
-        const secret:any = await speakeasy.generateSecret({length: 20, name: "venomous.gg"});
+        const secret:any = await speakeasy.generateSecret({length: 20, name: `venomous.gg`});
   
-        await User.updateOne({id: req.id}, {two_factor_secret: secret.base32});
+        await User.updateOne({_id: req.id}, {two_factor_secret: secret.base32});
   
         const qr = await QRCode.toDataURL(secret.otpauth_url);
   
@@ -329,7 +331,7 @@ export default () => {
 
       try {
 
-        const user = await User.findOne({id: req.id});
+        const user = await User.findOne({_id: req.id});
 
         if (user.two_factor == true) return res.status(400).json({"statusCode": 400,"error": "2fa already enabled"});
 

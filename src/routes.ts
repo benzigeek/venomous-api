@@ -28,7 +28,7 @@ const initDB = async () => {
   const db = await DB();
   router.use("/auth", Auth());
   router.use("/users", Users());
-  router.use("/cahnnels", Channels());
+  router.use("/channels", Channels());
   
 }
 

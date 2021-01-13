@@ -57,25 +57,22 @@ export default () => {
 
       const hash = await argon2.hash(req.body.password, {type: argon2.argon2id, saltLength: 60});
 
-      let flakeIdGen1 = new FlakeId({worker: 1});
-
       const newUser = new User({
         email: req.body.email,
         username: req.body.username,
-        id: intformat(flakeIdGen1.next(), 'dec'),
         hash
       });
 
-      await newUser.save();
+      const u = await newUser.save();
 
       await createChannel(newUser.id, newUser.username);
 
       const token = await Utils.generateToken();
 
       const newToken = new AuthToken({
-        id: newUser.id,
         token,
-        grant_type: "password"
+        grant_type: "password",
+        id: u._id
       });
 
       await newToken.save();
@@ -83,9 +80,9 @@ export default () => {
       const refreshToken = await Utils.generateToken();
 
       const newRefreshToken = new RefreshToken({
-        id: newUser.id,
         token: refreshToken,
-        grant_type: "password"
+        grant_type: "password",
+        id: u._id
       });
 
       await newRefreshToken.save();
@@ -97,7 +94,7 @@ export default () => {
 
       const newCode = new VerifyCode({
         code,
-        id: newUser.id
+        id: u._id
       });
 
       await newCode.save();
@@ -297,7 +294,7 @@ export default () => {
 
       try {
 
-        const user = await User.findOne({id: req.id});
+        const user = await User.findOne({_id: req.id});
   
         const code = await Utils.generateVerifyCode();
   
@@ -358,7 +355,7 @@ export default () => {
 
       await VerifyCode.deleteMany({id: req.id});
 
-      await User.updateOne({id: req.id}, {email_verifed: true});
+      await User.updateOne({_id: req.id}, {email_verifed: true});
 
       res.status(200).json({"statusCode": 200,"message": "successfully verified email"});
 
@@ -426,11 +423,8 @@ const createChannel = async (id:string, username:string) => {
   try {
 
     const skey = await Utils.generateStreamKey();
-
-    let flakeIdGen2 = new FlakeId({worker: 2});
     
     const newChannel = new Channel({
-      id: intformat(flakeIdGen2.next(), 'dec'),
       name: username,
       owner: id,
       stream_key: skey 

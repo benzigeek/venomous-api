@@ -34,7 +34,7 @@ export default () => {
 
       let data:any = _.pick(channel, ["name", "id", "offline_screen", "channel_meta_img", "chat_mode", "live", "stream_title", "current_game", "channel_img", "channel_banner"]);
 
-      let owner = _.pick(channel.owner[0], ["username", "id"]);
+      let owner = _.pick(channel.owner, ["username", "id"]);
 
       data.owner = owner;
 
@@ -52,13 +52,13 @@ export default () => {
     
     try {
 
-      const channel = await Channel.findOne({id: req.params.id});
+      const channel = await Channel.findOne({_id: req.params.id});
 
       if (!channel) return res.status(404).json({"statusCode":404,"error":"Channel Not Found"});
 
       let data:any = _.pick(channel, ["name", "id", "offline_screen", "channel_meta_img", "chat_mode", "live", "stream_title", "current_game", "channel_img", "channel_banner"]);
 
-      let owner = _.pick(channel.owner[0], ["username", "id"]);
+      let owner = _.pick(channel.owner, ["username", "id"]);
 
       data.owner = owner;
 
