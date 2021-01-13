@@ -22,6 +22,7 @@ import FlakeId from 'flake-idgen';
 import Utils from '../utils';
 import nodemailer from 'nodemailer';
 import config from 'config';
+import speakeasy from 'speakeasy';
 
 // import models
 import User from '../models/user';
@@ -132,37 +133,91 @@ export default () => {
       if (!user) return res.status(400).json({"statusCode":400,"error":"Invalid email or password"});
 
       if (await argon2.verify(user.hash, req.body.password)) {
-      
-        const token = await Utils.generateToken();
 
-        const newToken = new AuthToken({
-          id: user.id,
-          token,
-          grant_type: "password"
-        });
+        if (user.two_factor == true) {
 
-        await newToken.save();
+          if (!req.body.code) return res.status(400).json({"statusCode": 400, "error": "Invalid 2fa code"});
 
-        const refreshToken = await Utils.generateToken();
+          try {
 
-        const newRefreshToken = new RefreshToken({
-          id: user.id,
-          token: refreshToken,
-          grant_type: "password"
-        });
+            const verified = await speakeasy.totp.verify({
+              secret: user.two_factor_secret,
+              encoding: "base32",
+              token: req.body.code,
+              window: 0
+            });
 
-        await newRefreshToken.save();
+            if (!verified) return res.status(400).json({"statusCode":400,"error":"Invalid 2fa code"});  
 
-        let dt = new Date();
-        dt.setMinutes( dt.getMinutes() + 420 );
+            const token = await Utils.generateToken();
 
-        return res.status(200).json({
-          "statusCode": 200,
-          "access_token": token,
-          "refresh_token": refreshToken,
-          "token_type": "Bearer",
-          "expires": dt.getTime()
-        });
+            const newToken = new AuthToken({
+              id: user.id,
+              token,
+              grant_type: "password"
+            });
+
+            await newToken.save();
+
+            const refreshToken = await Utils.generateToken();
+
+            const newRefreshToken = new RefreshToken({
+              id: user.id,
+              token: refreshToken,
+              grant_type: "password"
+            });
+
+            await newRefreshToken.save();
+
+            let dt = new Date();
+            dt.setMinutes( dt.getMinutes() + 420 );
+
+            return res.status(200).json({
+              "statusCode": 200,
+              "access_token": token,
+              "refresh_token": refreshToken,
+              "token_type": "Bearer",
+              "expires": dt.getTime()
+            });
+
+          } catch (err) {
+            res.status(500).json({"statusCode":500,"error":"Internal Server Error"});
+          }
+
+        } else {
+
+          const token = await Utils.generateToken();
+
+          const newToken = new AuthToken({
+            id: user.id,
+            token,
+            grant_type: "password"
+          });
+
+          await newToken.save();
+
+          const refreshToken = await Utils.generateToken();
+
+          const newRefreshToken = new RefreshToken({
+            id: user.id,
+            token: refreshToken,
+            grant_type: "password"
+          });
+
+          await newRefreshToken.save();
+
+          let dt = new Date();
+          dt.setMinutes( dt.getMinutes() + 420 );
+
+          return res.status(200).json({
+            "statusCode": 200,
+            "access_token": token,
+            "refresh_token": refreshToken,
+            "token_type": "Bearer",
+            "expires": dt.getTime()
+          });
+
+        }
 
       } else {
       
@@ -401,7 +456,8 @@ const registerSchema = Joi.object({
 // login request validation schema
 const loginSchema = Joi.object({
   email: Joi.string().required().email(),
-  password: Joi.string().required()
+  password: Joi.string().required(),
+  code: Joi.string()
 });
 
 // refresh request validation schema

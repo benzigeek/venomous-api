@@ -23,7 +23,8 @@ import RefreshToken from '../models/refreahtokens';
 import Utils from '../utils';
 import nodemailer from 'nodemailer';
 import config from 'config';
-import logger from 'jethro';
+import speakeasy from 'speakeasy';
+import QRCode from 'qrcode';
 
 // import models
 import User from '../models/user';
@@ -147,7 +148,6 @@ export default () => {
         res.status(500).json({"statusCode":500,"error":"Internal server error"});
 
       }
-
 
     } else {
 
@@ -293,6 +293,81 @@ export default () => {
 
   });
 
+  // generate 2fa secret endpoint - GET "/v1/users/@me/2fa/generate"
+  api.get("/@me/2fa/generate", authenticate, async (req:any, res) => {
+
+    if (req.grant_type == "password") {
+
+      try {
+
+        const secret:any = await speakeasy.generateSecret({length: 20, name: "venomous.gg"});
+  
+        await User.updateOne({id: req.id}, {two_factor_secret: secret.base32});
+  
+        const qr = await QRCode.toDataURL(secret.otpauth_url);
+  
+        res.status(200).json({'statusCode':200,"data":{"code": secret, "QR": qr}});
+  
+      } catch (err) {
+  
+        console.log(err);
+  
+        res.status(500).json({"statusCode":500,"error":"Internal Server Error"});
+  
+      }
+
+    } else {
+      res.status(403).json({"statusCode":403,"error":"Forbidden"});
+    }
+
+  });
+
+  // enable 2fa endpoint - PUT "/v1/users/@me/2fa/enable"
+  api.put("/@me/2fa/enable", authenticate, async (req:any, res) => {
+
+    if (req.grant_type == "password") {
+
+      try {
+
+        const user = await User.findOne({id: req.id});
+
+        if (user.two_factor == true) return res.status(400).json({"statusCode": 400,"error": "2fa already enabled"});
+
+        try {
+
+          const verified = await speakeasy.totp.verify({
+            secret: user.two_factor_secret,
+            encoding: "base32",
+            token: req.body.code,
+            window: 0
+          });
+
+          if (!verified) return res.status(400).json({"statusCode":400,"error":"Invalid Code"});
+
+          user.two_factor = true;
+
+          await user.save();
+
+          res.status(200).json({"statusCode":200,"message":"Successfully enabled 2fa"});
+
+        } catch (err) {
+
+          res.status(500).json({"statusCode":500,"error":"Internal Server Error"});
+
+        }
+
+      } catch (err) {
+        res.status(500).json({"statusCode":500,"error":"Internal Server Error"});
+      }
+
+    } else {
+
+      res.status(403).json({"statusCode":403,"error":"Forbidden"});
+
+    }
+
+  });
+
   return api;
 
 }
@@ -359,4 +434,9 @@ const editPasswordSchema = Joi.object({
 const updateEmailSchema = Joi.object({
   current_password: Joi.string().required(),
   new_email: Joi.string().required().email()
+});
+
+// enable 2fa request schema
+const enable2faSchema = Joi.object({
+  code: Joi.string().required()
 });
