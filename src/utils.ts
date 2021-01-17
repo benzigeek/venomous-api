@@ -50,6 +50,36 @@ class Utils {
 
   }
 
+  // genarte raindom four char code
+  async genearteRandomFourCharCode(length) {
+
+    let result = "";
+
+    let characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+    let charLength = characters.length;
+
+    for (let i = 0; i < length; i++) {
+
+      result += characters.charAt(Math.floor(Math.random() * charLength));
+
+    }
+
+    return result;
+
+  }
+
+  // generate recovery code
+  async generateRecoveryCode(): Promise<string> {
+
+    const code1 = await this.genearteRandomFourCharCode(4);
+
+    const code2 = await this.genearteRandomFourCharCode(4);
+
+    return code1 + "-" + code2;
+
+  }
+
   // generate verify codes
   async generateVerifyCode(): Promise<string> {
 
