@@ -31,6 +31,7 @@ import VerifyCode from '../models/verifycode';
 
 // import middleware
 import { authenticate } from '../middleware';
+import recoverycode from '../models/recoverycode';
 
 export default () => {
 
@@ -115,7 +116,7 @@ export default () => {
   });
 
   // login endpoint - POST "/v1/auth/login"
-  api.post("/login", async (req, res) => {
+  api.post("/login", async (req:any, res) => {
 
     const {error} = loginSchema.validate(req.body);
 
@@ -135,45 +136,88 @@ export default () => {
 
           try {
 
-            const verified = await speakeasy.totp.verify({
-              secret: user.two_factor_secret,
-              encoding: "base32",
-              token: req.body.code,
-              window: 0
-            });
+            if (req.body.code.indexOf("-")) {
+            
+              const code = await recoverycode.findOne({code: req.body.code, id: user.id});
 
-            if (!verified) return res.status(400).json({"statusCode":400,"error":"2fa enabled"});  
+              if (!code) return res.status(400).json({"statusCode":400,"error":"Invalid Code"});
 
-            const token = await Utils.generateToken();
+              const token = await Utils.generateToken();
+  
+              const newToken = new AuthToken({
+                id: user.id,
+                token,
+                grant_type: "password"
+              });
+  
+              await newToken.save();
+  
+              const refreshToken = await Utils.generateToken();
+  
+              const newRefreshToken = new RefreshToken({
+                id: user.id,
+                token: refreshToken,
+                grant_type: "password"
+              });
+  
+              await newRefreshToken.save();
+  
+              let dt = new Date();
+              dt.setMinutes( dt.getMinutes() + 420 );
 
-            const newToken = new AuthToken({
-              id: user.id,
-              token,
-              grant_type: "password"
-            });
+              await recoverycode.deleteMany({code: req.body.code, id: user.id});
+  
+              return res.status(200).json({
+                "statusCode": 200,
+                "access_token": token,
+                "refresh_token": refreshToken,
+                "token_type": "Bearer",
+                "expires": dt.getTime()
+              });
 
-            await newToken.save();
+            } else {
 
-            const refreshToken = await Utils.generateToken();
+              const verified = await speakeasy.totp.verify({
+                secret: user.two_factor_secret,
+                encoding: "base32",
+                token: req.body.code,
+                window: 0
+              });
+  
+              if (!verified) return res.status(400).json({"statusCode":400,"error":"2fa enabled"});  
+  
+              const token = await Utils.generateToken();
+  
+              const newToken = new AuthToken({
+                id: user.id,
+                token,
+                grant_type: "password"
+              });
+  
+              await newToken.save();
+  
+              const refreshToken = await Utils.generateToken();
+  
+              const newRefreshToken = new RefreshToken({
+                id: user.id,
+                token: refreshToken,
+                grant_type: "password"
+              });
+  
+              await newRefreshToken.save();
+  
+              let dt = new Date();
+              dt.setMinutes( dt.getMinutes() + 420 );
+  
+              return res.status(200).json({
+                "statusCode": 200,
+                "access_token": token,
+                "refresh_token": refreshToken,
+                "token_type": "Bearer",
+                "expires": dt.getTime()
+              });
 
-            const newRefreshToken = new RefreshToken({
-              id: user.id,
-              token: refreshToken,
-              grant_type: "password"
-            });
-
-            await newRefreshToken.save();
-
-            let dt = new Date();
-            dt.setMinutes( dt.getMinutes() + 420 );
-
-            return res.status(200).json({
-              "statusCode": 200,
-              "access_token": token,
-              "refresh_token": refreshToken,
-              "token_type": "Bearer",
-              "expires": dt.getTime()
-            });
+            }
 
           } catch (err) {
             res.status(500).json({"statusCode":500,"error":"Internal Server Error"});
@@ -376,7 +420,7 @@ const sendEmail = async (code:string, email:string) => {
     port: 465,
     secure: true,
     auth: {
-      user: "no-reply@venomous.gg",
+      user: config.get("emailusername"),
       pass: config.get("emailpass"),
     }
   });
@@ -384,7 +428,7 @@ const sendEmail = async (code:string, email:string) => {
   try {
 
     const info = await transporter.sendMail({
-      from: `"Venomous" <no-reply@venomous.gg>`,
+      from: `"Venomous" <${config.get("emailusername")}>`,
       to: email,
       subject: "Email Verifcation",
       text: code
@@ -397,7 +441,7 @@ const sendEmail = async (code:string, email:string) => {
     try {
 
       const info = await transporter.sendMail({
-        from: `"Venomous" <no-reply@venomous.gg>`,
+        from: `"Venomous" <${config.get("emailusername")}>`,
         to: email,
         subject: "Email Verifcation",
         text: code

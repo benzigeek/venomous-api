@@ -29,6 +29,7 @@ import QRCode from 'qrcode';
 // import models
 import User from '../models/user';
 import VerifyCode from '../models/verifycode';
+import RecoveryCode from '../models/recoverycode';
 
 export default () => {
 
@@ -350,7 +351,9 @@ export default () => {
 
           await user.save();
 
-          res.status(200).json({"statusCode":200,"message":"Successfully enabled 2fa"});
+          const codes = await generateRecovery(req.id);
+
+          res.status(200).json({"statusCode":200,"data": {"codes": codes}});
 
         } catch (err) {
 
@@ -374,6 +377,65 @@ export default () => {
 
 }
 
+const generateRecovery = async (id:string) => {
+
+  let codes: string[] = [];
+
+  const code1:string = await Utils.generateRecoveryCode();
+
+  codes.push(code1);
+
+  const code2:string = await Utils.generateRecoveryCode();
+
+  codes.push(code2);
+
+  const code3:string = await Utils.generateRecoveryCode();
+
+  codes.push(code3);
+
+  const code4:string = await Utils.generateRecoveryCode();
+
+  codes.push(code4);
+
+  const code5:string = await Utils.generateRecoveryCode();
+
+  codes.push(code5);
+
+  const code6:string = await Utils.generateRecoveryCode();
+
+  codes.push(code6);
+
+  const code7:string = await Utils.generateRecoveryCode();
+
+  codes.push(code7);
+
+  const code8:string = await Utils.generateRecoveryCode();
+
+  codes.push(code8);
+
+  const code9:string = await Utils.generateRecoveryCode();
+
+  codes.push(code9);
+
+  const code10:string = await Utils.generateRecoveryCode();
+
+  codes.push(code10);
+
+  codes.forEach(async (code) => {
+
+    const newCode = new RecoveryCode({
+      code,
+      id
+    });
+
+    await newCode.save();
+
+  });
+
+  return codes;
+
+}
+
 const sendEmail = async (code:string, email:string) => {
   
   let transporter = nodemailer.createTransport({
@@ -381,7 +443,7 @@ const sendEmail = async (code:string, email:string) => {
     port: 465,
     secure: true,
     auth: {
-      user: "no-reply@venomous.gg",
+      user: config.get("emailusername"),
       pass: config.get("emailpass"),
     }
   });
@@ -389,7 +451,7 @@ const sendEmail = async (code:string, email:string) => {
   try {
 
     const info = await transporter.sendMail({
-      from: `"Venomous" <no-reply@venomous.gg>`,
+      from: `"Venomous" <${config.get("emailusername")}>`,
       to: email,
       subject: "Email Verifcation",
       text: code
@@ -402,7 +464,7 @@ const sendEmail = async (code:string, email:string) => {
     try {
 
       const info = await transporter.sendMail({
-        from: `"Venomous" <no-reply@venomous.gg>`,
+        from: `"Venomous" <${config.get("emailusername")}>`,
         to: email,
         subject: "Email Verifcation",
         text: code
@@ -441,4 +503,9 @@ const updateEmailSchema = Joi.object({
 // enable 2fa request schema
 const enable2faSchema = Joi.object({
   code: Joi.string().required()
+});
+
+// edit phone number request schema
+const editPhoneNumber = Joi.object({
+  phone_number: Joi.string().required()
 });
