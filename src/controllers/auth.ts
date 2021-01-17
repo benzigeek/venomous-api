@@ -28,6 +28,7 @@ import AuthToken from '../models/authtokens';
 import RefreshToken from '../models/refreahtokens';
 import Channel from '../models/channel';
 import VerifyCode from '../models/verifycode';
+import OTP from '../models/otp';
 
 // import middleware
 import { authenticate } from '../middleware';
@@ -177,45 +178,84 @@ export default () => {
 
             } else {
 
-              const verified = await speakeasy.totp.verify({
-                secret: user.two_factor_secret,
-                encoding: "base32",
-                token: req.body.code,
-                window: 0
-              });
+              const otp = await OTP.findOne({id: user.id, otp: req.body.code});
+
+              if (!otp) {
+
+                const verified = await speakeasy.totp.verify({
+                  secret: user.two_factor_secret,
+                  encoding: "base32",
+                  token: req.body.code,
+                  window: 0
+                });
+    
+                if (!verified) return res.status(400).json({"statusCode": 400,"error": "Invalid Code"});
+
+                const token = await Utils.generateToken();
   
-              if (!verified) return res.status(400).json({"statusCode":400,"error":"2fa enabled"});  
+                const newToken = new AuthToken({
+                  id: user.id,
+                  token,
+                  grant_type: "password"
+                });
+      
+                await newToken.save();
+      
+                const refreshToken = await Utils.generateToken();
+      
+                const newRefreshToken = new RefreshToken({
+                  id: user.id,
+                  token: refreshToken,
+                  grant_type: "password"
+                });
+      
+                await newRefreshToken.save();
+      
+                let dt = new Date();
+                dt.setMinutes( dt.getMinutes() + 420 );
+      
+                return res.status(200).json({
+                  "statusCode": 200,
+                  "access_token": token,
+                  "refresh_token": refreshToken,
+                  "token_type": "Bearer",
+                  "expires": dt.getTime()
+                });
+
+              } else {
+
+                const token = await Utils.generateToken();
   
-              const token = await Utils.generateToken();
-  
-              const newToken = new AuthToken({
-                id: user.id,
-                token,
-                grant_type: "password"
-              });
-  
-              await newToken.save();
-  
-              const refreshToken = await Utils.generateToken();
-  
-              const newRefreshToken = new RefreshToken({
-                id: user.id,
-                token: refreshToken,
-                grant_type: "password"
-              });
-  
-              await newRefreshToken.save();
-  
-              let dt = new Date();
-              dt.setMinutes( dt.getMinutes() + 420 );
-  
-              return res.status(200).json({
-                "statusCode": 200,
-                "access_token": token,
-                "refresh_token": refreshToken,
-                "token_type": "Bearer",
-                "expires": dt.getTime()
-              });
+                const newToken = new AuthToken({
+                  id: user.id,
+                  token,
+                  grant_type: "password"
+                });
+      
+                await newToken.save();
+      
+                const refreshToken = await Utils.generateToken();
+      
+                const newRefreshToken = new RefreshToken({
+                  id: user.id,
+                  token: refreshToken,
+                  grant_type: "password"
+                });
+      
+                await newRefreshToken.save();
+      
+                let dt = new Date();
+                dt.setMinutes( dt.getMinutes() + 420 );
+      
+                return res.status(200).json({
+                  "statusCode": 200,
+                  "access_token": token,
+                  "refresh_token": refreshToken,
+                  "token_type": "Bearer",
+                  "expires": dt.getTime()
+                });
+
+              }
 
             }
 

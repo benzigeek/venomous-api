@@ -2,5 +2,10 @@
   "port": 3005,
   "mongo": null,
   "emailpass": null,
-  "emailusername": "no-reply@venomous.gg"
+  "emailusername": "no-reply@venomous.gg",
+  "phone": "+13059026690",
+  "twilio": {
+    "sid": null,
+    "token": null
+  }
 }
