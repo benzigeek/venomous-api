@@ -34,6 +34,22 @@ class Utils {
 
   }
 
+  // genarte otp gateway token
+  async generateOtpGatewayToken(): Promise<string> {
+
+    try {
+
+      const buffer = await randomBytes(600);
+      return crypto.createHash("sha1").update(buffer).digest("hex");
+
+    } catch (err) {
+
+      throw err;
+
+    }
+
+  }
+
   // generate stream key
   async generateStreamKey(): Promise<string> {
 
