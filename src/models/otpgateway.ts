@@ -23,7 +23,7 @@ interface IOTPGateway extends mongoose.Document {
 const OTPGateway = new Schema({
   gateway_token: {type: String, required: true},
   id: {type: String, required: true},
-  createdAt: { type: Date, expires: 25200, default: Date.now }
+  createdAt: { type: Date, expires: 300, default: Date.now }
 });
 
 export default mongoose.model<IOTPGateway>("otpgateways", OTPGateway);
