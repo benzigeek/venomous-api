@@ -15,14 +15,15 @@
 import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
-interface IRecoveryCode extends mongoose.Document {
-  code: string,
+interface IOTPGateway extends mongoose.Document {
+  gateway_token: string,
   id: string
 }
 
-const RecoveryCode = new Schema({
-  code: {type: String, required: true},
-  id: {type: String, required: true}
+const OTPGateway = new Schema({
+  gateway_token: {type: String, required: true},
+  id: {type: String, required: true},
+  createdAt: { type: Date, expires: 25200, default: Date.now }
 });
 
-export default mongoose.model<IRecoveryCode>("recoverycodes", RecoveryCode);
+export default mongoose.model<IOTPGateway>("otpgateways", OTPGateway);

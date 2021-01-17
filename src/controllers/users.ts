@@ -25,11 +25,16 @@ import nodemailer from 'nodemailer';
 import config from 'config';
 import speakeasy from 'speakeasy';
 import QRCode from 'qrcode';
+import twilio, { twiml } from 'twilio';
+import otpGen from 'otp-generator';
+
+const twiCli = twilio(config.get("twilio.sid"), config.get("twilio.token"));
 
 // import models
 import User from '../models/user';
 import VerifyCode from '../models/verifycode';
 import RecoveryCode from '../models/recoverycode';
+import OTP from '../models/otp';
 
 export default () => {
 
@@ -226,10 +231,80 @@ export default () => {
 
     }
 
+  });
+
+  // add/update phone number - PUT "/v1/users/@me/edit/phone"
+  api.put("/@me/edit/phone", authenticate, async (req:any, res) => {
+
+    const {error} = editPhoneNumberSchema.validate(req.body);
+
+    if (error) return res.status(400).json({"statusCode": 400, "error": error.details[0].message});
+
     try {
 
+      if (req.grant_type == "password") {
+
+        const code = await OTP.findOne({id: req.id, otp: req.body.code});
+
+        if (!code) return res.status(400).json({"statusCode":400,"error":"Invalid Code"});
+
+        await User.updateOne({_id: req.id, phone_number: code.phone_number});
+        
+        await OTP.deleteOne({id: req.id, code: req.body.code});
+  
+        res.status(200).json({"statusCode": 200,"message": "Successfully Added Phone Number"});
+
+      } else {
+
+        res.status(403).json({"statusCode": 403, "error": "Forbidden"});
+
+      }
+
     } catch (err) {
-      
+
+      res.status(500).json({"statusCode": 500,"error": "Internal Server Error"});
+
+    }
+
+  });
+
+  // create and send otp to phone - POST "/v1/users/@me/otp/gen"
+  api.post("/@me/otp/gen", authenticate, async (req:any, res) => {
+
+    const {error} = genOtpSchema.validate(req.body);
+
+    if (error) return res.status(400).json({'statusCode':400,"error":error.details[0].message});
+
+    try {
+
+      if (req.grant_type == "password") {
+
+        const otp = await otpGen.generate(6, { alphabets: false, digits: true, upperCase: false, specialChars: false });
+
+        const newOTP = new OTP({
+          otp,
+          id: req.id,
+          phone_number: req.body.phone_number
+        });
+
+        await newOTP.save();
+
+        await twiCli.messages.create({
+          "body": `Your Venomous Verification code is: ${otp}`,
+          "from": config.get("phone"),
+          "to": req.body.phone_number
+        });
+
+        res.status(200).json({"statusCode": 200,"message": "Sent Message"});
+
+      } else {
+
+        res.status(403).json({"statusCode": 403,"error": "Forbidden"});
+
+      }
+
+    } catch (err) {
+
       res.status(500).json({"statusCode":500,"error":"Internal Server Error"});
 
     }
@@ -377,6 +452,7 @@ export default () => {
 
 }
 
+// genarte recovery codes
 const generateRecovery = async (id:string) => {
 
   let codes: string[] = [];
@@ -436,6 +512,7 @@ const generateRecovery = async (id:string) => {
 
 }
 
+// send email
 const sendEmail = async (code:string, email:string) => {
   
   let transporter = nodemailer.createTransport({
@@ -505,7 +582,12 @@ const enable2faSchema = Joi.object({
   code: Joi.string().required()
 });
 
-// edit phone number request schema
-const editPhoneNumber = Joi.object({
+// gen otp request schema
+const genOtpSchema = Joi.object({
   phone_number: Joi.string().required()
+});
+
+// edit phone number request schema
+const editPhoneNumberSchema = Joi.object({
+  code: Joi.string().required()
 });

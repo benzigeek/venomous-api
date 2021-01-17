@@ -25,7 +25,8 @@ interface IUser extends mongoose.Document {
   username_time: number,
   email_verified: boolean,
   two_factor: boolean,
-  two_factor_secret: string
+  two_factor_secret: string,
+  phone_number: string
 }
 
 const User = new Schema({
@@ -37,7 +38,8 @@ const User = new Schema({
   created: {type: Date, default: new Date()},
   email_verifed: {type: Boolean, default: false},
   two_factor: {type: Boolean, default: false},
-  two_factor_secret: {type: String, default: null}
+  two_factor_secret: {type: String, default: null},
+  phone_number: {type: String, default: null}
 });
 
 User.method("toClient", () => {

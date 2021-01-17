@@ -11,18 +11,20 @@
 * Repo: github.com/benzigeek/venomous-api
 * Copyright (c) 2021 Jordan (benzigeek)
 */
-
 import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
-interface IRecoveryCode extends mongoose.Document {
-  code: string,
-  id: string
+interface IOTP extends mongoose.Document {
+  otp: string,
+  id: string,
+  phone_number: string
 }
 
-const RecoveryCode = new Schema({
-  code: {type: String, required: true},
-  id: {type: String, required: true}
+const otp = new Schema({
+  otp: {type: String, required: true},
+  id: {type: String, required: true},
+  phone_number: {type: String, required: true},
+  createdAt: { type: Date, expires: 600, default: Date.now }
 });
 
-export default mongoose.model<IRecoveryCode>("recoverycodes", RecoveryCode);
+export default mongoose.model<IOTP>("otps", otp);

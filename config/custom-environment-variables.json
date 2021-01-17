@@ -1,4 +1,8 @@
 {
   "mongo": "MONGO_URI",
-  "emailpass": "EMAIL_PASSWORD"
+  "emailpass": "EMAIL_PASSWORD",
+  "twilio": {
+    "sid": "PHONE_SID",
+    "token": "PHONE_TOKEN"
+  }
 }
