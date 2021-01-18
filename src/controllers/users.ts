@@ -18,8 +18,6 @@ import { authenticate } from '../middleware';
 import _ from 'lodash';
 import Joi from 'joi';
 import argon2 from 'argon2';
-import AuthToken from '../models/authtokens';
-import RefreshToken from '../models/refreahtokens';
 import Utils from '../utils';
 import nodemailer from 'nodemailer';
 import config from 'config';
@@ -28,13 +26,15 @@ import QRCode from 'qrcode';
 import twilio, { twiml } from 'twilio';
 import otpGen from 'otp-generator';
 
-const twiCli = twilio(config.get("twilio.sid"), config.get("twilio.token"));
-
 // import models
 import User from '../models/user';
 import VerifyCode from '../models/verifycode';
 import RecoveryCode from '../models/recoverycode';
 import OTP from '../models/otp';
+import AuthToken from '../models/authtokens';
+import RefreshToken from '../models/refreahtokens';
+
+const twiCli = twilio(config.get("twilio.sid"), config.get("twilio.token"));
 
 export default () => {
 
@@ -177,6 +177,14 @@ export default () => {
       const user = await User.findOne({_id:req.id});
 
       if (await argon2.verify(user.hash, req.body.current_password)) {
+
+        const verify = speakeasy.totp.verify({
+          secret: user.two_factor_secret,
+          encoding: "base32",
+          token: req.body.code
+        });
+
+        if (!verify) return res.status(400).json({"statusCode":400,"error":"Invalid Code"});
 
         const hash = await argon2.hash(req.body.new_password, {type:argon2.argon2id, saltLength: 60});
 
@@ -568,7 +576,8 @@ const editUsernameSchema = Joi.object({
 // edit password request schema
 const editPasswordSchema = Joi.object({
   current_password: Joi.string().required(),
-  new_password: Joi.string().min(6).max(40).required() 
+  new_password: Joi.string().min(6).max(40).required(),
+  code: Joi.string().required()
 });
 
 // update email request schema
