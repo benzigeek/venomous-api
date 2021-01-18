@@ -32,11 +32,10 @@ import Channel from '../models/channel';
 import VerifyCode from '../models/verifycode';
 import OTP from '../models/otp';
 import OTPGateway from '../models/otpgateway';
-
+import recoverycode from '../models/recoverycode';
 
 // import middleware
 import { authenticate } from '../middleware';
-import recoverycode from '../models/recoverycode';
 
 const twiCli = twilio(config.get("twilio.sid"), config.get("twilio.token"));
 
@@ -73,28 +72,7 @@ export default () => {
 
       await createChannel(newUser.id, newUser.username);
 
-      const token = await Utils.generateToken();
-
-      const newToken = new AuthToken({
-        token,
-        grant_type: "password",
-        id: u._id
-      });
-
-      await newToken.save();
-
-      const refreshToken = await Utils.generateToken();
-
-      const newRefreshToken = new RefreshToken({
-        token: refreshToken,
-        grant_type: "password",
-        id: u._id
-      });
-
-      await newRefreshToken.save();
-
-      var dt = new Date();
-      dt.setMinutes( dt.getMinutes() + 420 );
+      const tokens = await genAuthTokens(u._id);
 
       const code = await Utils.generateVerifyCode();
 
@@ -107,10 +85,10 @@ export default () => {
 
       res.status(200).json({
         "statusCode": 200,
-        "access_token": token,
-        "refresh_token": refreshToken,
+        "access_token": tokens.access_token,
+        "refresh_token": tokens.refresh_token,
         "token_type": "Bearer",
-        "expires": dt.getTime()
+        "expires": tokens.expires
       });
 
       await sendEmail(code, newUser.email);
@@ -139,57 +117,27 @@ export default () => {
 
         if (user.two_factor == true) {
 
-          try {
+          const newGatewayToken = await Utils.generateOtpGatewayToken();
 
-            const newGatewayToken = await Utils.generateOtpGatewayToken();
+          const newOtpGatway = new OTPGateway({
+            gateway_token: newGatewayToken,
+            id: user.id
+          });
 
-            const newOtpGatway = new OTPGateway({
-              gateway_token: newGatewayToken,
-              id: user.id
-            });
+          await newOtpGatway.save();
 
-            await newOtpGatway.save();
-
-            res.status(200).json({"statusCode":200,"gateway_token": newGatewayToken});
-
-          } catch (err) {
-
-            console.log(err);
-
-            res.status(500).json({"statusCode":500,"error":"Internal Server Error"});
-          }
+          res.status(200).json({"statusCode":200,"gateway_token": newGatewayToken});
 
         } else {
 
-          const token = await Utils.generateToken();
-
-          const newToken = new AuthToken({
-            id: user.id,
-            token,
-            grant_type: "password"
-          });
-
-          await newToken.save();
-
-          const refreshToken = await Utils.generateToken();
-
-          const newRefreshToken = new RefreshToken({
-            id: user.id,
-            token: refreshToken,
-            grant_type: "password"
-          });
-
-          await newRefreshToken.save();
-
-          let dt = new Date();
-          dt.setMinutes( dt.getMinutes() + 420 );
+          const tokens = await genAuthTokens(user.id);
 
           return res.status(200).json({
             "statusCode": 200,
-            "access_token": token,
-            "refresh_token": refreshToken,
+            "access_token": tokens.access_token,
+            "refresh_token": tokens.refresh_token,
             "token_type": "Bearer",
-            "expires": dt.getTime()
+            "expires": tokens.expires
           });
 
         }
@@ -267,51 +215,26 @@ export default () => {
       if (!gateway) return res.status(400).json({"statusCode":400,"error":"Ivalid Gateway"});
 
       if (req.body.code.includes("-")) {
-
-        console.log("debug2");
             
         const code = await recoverycode.findOne({code: req.body.code, id: gateway.id});
 
         if (!code) return res.status(400).json({"statusCode":400,"error":"Invalid Code"});
 
-        const token = await Utils.generateToken();
-
-        const newToken = new AuthToken({
-          id: gateway.id,
-          token,
-          grant_type: "password"
-        });
-
-        await newToken.save();
-
-        const refreshToken = await Utils.generateToken();
-
-        const newRefreshToken = new RefreshToken({
-          id: gateway.id,
-          token: refreshToken,
-          grant_type: "password"
-        });
-
-        await newRefreshToken.save();
-
-        let dt = new Date();
-        dt.setMinutes( dt.getMinutes() + 420 );
+        const tokens = await genAuthTokens(gateway.id);
 
         await recoverycode.deleteMany({code: req.body.code, id:gateway.id});
 
         return res.status(200).json({
           "statusCode": 200,
-          "access_token": token,
-          "refresh_token": refreshToken,
+          "access_token": tokens.access_token,
+          "refresh_token": tokens.refresh_token,
           "token_type": "Bearer",
-          "expires": dt.getTime()
+          "expires": tokens.expires
         });
 
       } else {
 
         const otp = await OTP.findOne({otp: req.body.code, id: gateway.id});
-
-        console.log(otp);
 
         if (!otp) {
 
@@ -325,76 +248,32 @@ export default () => {
   
           if (!verify) return res.status(400).json({"statusCode": 400,"error":"Invalid Code"});
   
-          const token = await Utils.generateToken();
-  
-          const newToken = new AuthToken({
-            id: gateway.id,
-            token,
-            grant_type: "password"
-          });
-  
-          await newToken.save();
-  
-          const refreshToken = await Utils.generateToken();
-  
-          const newRefreshToken = new RefreshToken({
-            id: gateway.id,
-            token: refreshToken,
-            grant_type: "password"
-          });
-  
-          await newRefreshToken.save();
-  
           await OTPGateway.deleteMany({id: gateway.id});
   
-          let dt = new Date();
-          dt.setMinutes( dt.getMinutes() + 420 );
+          const tokens = await genAuthTokens(user.id);
   
           return res.status(200).json({
             "statusCode": 200,
-            "access_token": token,
-            "refresh_token": refreshToken,
+            "access_token": tokens.access_token,
+            "refresh_token": tokens.refresh_token,
             "token_type": "Bearer",
-            "expires": dt.getTime()
+            "expires": tokens.expires
           });
   
         } else {
-
-          console.log("debug")
-  
-          const token = await Utils.generateToken();
-  
-          const newToken = new AuthToken({
-            id: gateway.id,
-            token,
-            grant_type: "password"
-          });
-  
-          await newToken.save();
-  
-          const refreshToken = await Utils.generateToken();
-  
-          const newRefreshToken = new RefreshToken({
-            id: gateway.id,
-            token: refreshToken,
-            grant_type: "password"
-          });
-  
-          await newRefreshToken.save();
   
           await OTP.deleteMany({id: gateway.id});
   
           await OTPGateway.deleteMany({id: gateway.id});
-  
-          let dt = new Date();
-          dt.setMinutes( dt.getMinutes() + 420 );
+
+          const tokens = await genAuthTokens(gateway.id);
   
           return res.status(200).json({
             "statusCode": 200,
-            "access_token": token,
-            "refresh_token": refreshToken,
+            "access_token": tokens.access_token,
+            "refresh_token": tokens.refresh_token,
             "token_type": "Bearer",
-            "expires": dt.getTime()
+            "expires": tokens.expires
           });
   
         }
@@ -424,35 +303,14 @@ export default () => {
 
       await RefreshToken.deleteOne({token: req.body.refresh_token});
 
-      const token2 = await Utils.generateToken();
-
-      const newToken = new AuthToken({
-        id: token.id,
-        token: token2,
-        grant_type: "password"
-      });
-
-      await newToken.save();
-
-      const refreshToken = await Utils.generateToken();
-
-      const newRefreshToken = new RefreshToken({
-        id: token.id,
-        token: refreshToken,
-        grant_type: "password"
-      });
-
-      await newRefreshToken.save();
-
-      let dt = new Date();
-      dt.setMinutes( dt.getMinutes() + 420 );
+      const tokens = await genAuthTokens(token.id);
 
       return res.status(200).json({
         "statusCode": 200,
-        "access_token": token2,
-        "refresh_token": refreshToken,
+        "access_token": tokens.access_token,
+        "refresh_token": tokens.refresh_token,
         "token_type": "Bearer",
-        "expires": dt.getTime()
+        "expires": tokens.expires
       });
 
     } catch (err) {
@@ -616,6 +474,48 @@ const createChannel = async (id:string, username:string) => {
   }
 
 };
+
+// gen auth tokens
+const genAuthTokens = async (id:string) => {
+
+  try {
+
+    const token = await Utils.generateToken();
+  
+    const newToken = new AuthToken({
+      id,
+      token,
+      grant_type: "password"
+    });
+  
+    await newToken.save();
+  
+    const refreshToken = await Utils.generateToken();
+  
+    const newRefreshToken = new RefreshToken({
+      id,
+      token: refreshToken,
+      grant_type: "password"
+    });
+
+    await newRefreshToken.save();
+  
+    let dt = new Date();
+    dt.setMinutes( dt.getMinutes() + 420 );
+
+    return {
+      "access_token": token,
+      "refresh_token": refreshToken,
+      "expires": dt.getTime()
+    }
+
+  } catch (err) {
+
+    throw err;
+
+  }
+
+}
 
 // gen otp for login schema
 const OTPSchema = Joi.object({
