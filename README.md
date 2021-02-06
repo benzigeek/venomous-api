@@ -15,7 +15,7 @@ venomous uses multiple applications to fully work so you'll need the other repos
 * [RESTful API](https://github.com/watch-venomous/venomous-api)
 * Web Client (Not Public Yet)
 * Websocket Server (Not Public Yet)
-* Streaming Server (Not Public Yet)
+* Digest Server (Not Public Yet)
 * Mobile App (Not Public Yet)
 
 # Development
