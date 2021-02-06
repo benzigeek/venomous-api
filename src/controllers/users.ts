@@ -386,13 +386,17 @@ export default () => {
 
       try {
 
+        const user = await User.findOne({_id: req.id});
+
+        if (user.two_factor == true) return res.status(400).json({"statusCode":400,"error":"2fa already enabled"});
+
         const secret:any = await speakeasy.generateSecret({length: 20, name: `venomous.gg`});
   
         await User.updateOne({_id: req.id}, {two_factor_secret: secret.base32});
   
         const qr = await QRCode.toDataURL(secret.otpauth_url);
   
-        res.status(200).json({'statusCode':200,"data":{"code": secret, "QR": qr}});
+        res.status(200).json({'statusCode':200,"data":{"code": secret.base32, "QR": qr}});
   
       } catch (err) {
   
