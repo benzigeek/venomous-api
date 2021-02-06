@@ -12,7 +12,7 @@ If you'd like to donate to help the devlopemnt of Venomous, you can do so using 
 
 venomous uses multiple applications to fully work so you'll need the other repos
 
-* [RESTful API](https://github.com/benzigeek/venomous-api)
+* [RESTful API](https://github.com/watch-venomous/venomous-api)
 * Web Client (Not Public Yet)
 * Websocket Server (Not Public Yet)
 * Streaming Server (Not Public Yet)
