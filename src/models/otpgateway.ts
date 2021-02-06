@@ -15,10 +15,8 @@
 import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
-interface IOTPGateway extends mongoose.Document {
-  gateway_token: string,
-  id: string
-}
+// import types
+import { IOTPGateway } from '../types';
 
 const OTPGateway = new Schema({
   gateway_token: {type: String, required: true},

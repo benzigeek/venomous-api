@@ -15,10 +15,8 @@
 import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
-interface IVerifyCode extends mongoose.Document {
-  code: string,
-  id: string
-}
+// import types
+import { IVerifyCode } from '../types';
 
 const VerifyCode = new Schema({
   code: {type: String, required: true},

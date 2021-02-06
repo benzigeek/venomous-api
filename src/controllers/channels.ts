@@ -13,18 +13,21 @@
 */
 
 // import thirdparty packages
-import { Router } from 'express';
+import express from 'express';
 import _ from 'lodash';
 
 // import models
 import Channel from '../models/channel';
 
+// import types
+import { IReq } from '../types';
+
 export default () => {
 
-  let api = Router();
+  let api = express.Router();
  
   // get channel by name endpoint - GET "/v1/cahnnels/@/<name>"
-  api.get("/@/:name", async (req, res) => {
+  api.get("/@/:name", async (req:IReq, res:express.Response) => {
   
     try {
 
@@ -48,7 +51,7 @@ export default () => {
   });
 
   // get cahnnel by id endpoint - GET "/v1/channels/<id>"
-  api.get("/:id", async (req, res) => {
+  api.get("/:id", async (req:IReq, res:express.Response) => {
     
     try {
 

@@ -15,23 +15,8 @@
 import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
-interface IChannel extends mongoose.Document {
-  id: string,
-  name: string,
-  owner: IUser,
-  stream_key: string,
-  offline_screen: string,
-  channel_meta_img: string,
-  chat_mode: string,
-  live: boolean,
-  stream_title: string,
-  current_game: string
-}
-
-interface IUser {
-  id: string,
-  username: string
-}
+// import types
+import { IChannel } from '../types';
 
 const Channel = new Schema({
   name: {type: String, required: true},

@@ -56,7 +56,7 @@ class Utils {
     try {
 
       const buffer = await randomBytes(500);
-      return crypto.createHash("sha1").update(buffer).digest("hex");
+      return crypto.createHash("sha2").update(buffer).digest("hex");
       
     } catch (err) {
 

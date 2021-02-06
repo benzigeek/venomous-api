@@ -14,11 +14,8 @@
 import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
-interface IOTP extends mongoose.Document {
-  otp: string,
-  id: string,
-  phone_number: string
-}
+// import types
+import { IOTP } from '../types';
 
 const otp = new Schema({
   otp: {type: String, required: true},

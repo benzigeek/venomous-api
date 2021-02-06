@@ -15,11 +15,8 @@
 import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
-interface IChannelVIP extends mongoose.Document {
-  username: string,
-  channel: string,
-  id: string
-}
+// import types
+import { IChannelVIP } from '../types';
 
 const ChannelVIP = new Schema({
   username: {type: String, required: true},

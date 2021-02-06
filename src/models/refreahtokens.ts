@@ -15,13 +15,8 @@
 import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
-interface IRefreashToken extends mongoose.Document {
-  token: string,
-  id: string,
-  scope: string[],
-  grant_type: string,
-  client_id: string
-}
+// import types
+import { IRefreashToken } from '../types'
 
 const RefreshToken = new Schema({
   token: {type: String, required: true},

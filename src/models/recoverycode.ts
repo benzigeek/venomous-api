@@ -15,10 +15,8 @@
 import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
-interface IRecoveryCode extends mongoose.Document {
-  code: string,
-  id: string
-}
+// import types
+import { IRecoveryCode } from '../types';
 
 const RecoveryCode = new Schema({
   code: {type: String, required: true},

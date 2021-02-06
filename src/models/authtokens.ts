@@ -15,13 +15,8 @@
 import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
-interface IAuthToken extends mongoose.Document {
-  token: string,
-  id: string,
-  scope: string[],
-  grant_type: string,
-  client_id: string
-}
+// import types
+import { IAuthToken } from '../types';
 
 const AuthToken = new Schema({
   id: {type: String, required: true},

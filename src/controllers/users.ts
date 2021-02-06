@@ -13,7 +13,7 @@
 */
 
 // import thirdparty packages
-import { Router } from 'express';
+import express from 'express';
 import { authenticate } from '../middleware';
 import _ from 'lodash';
 import Joi from 'joi';
@@ -34,14 +34,17 @@ import OTP from '../models/otp';
 import AuthToken from '../models/authtokens';
 import RefreshToken from '../models/refreahtokens';
 
+// import types
+import { IReq } from '../types';
+
 const twiCli = twilio(config.get("twilio.sid"), config.get("twilio.token"));
 
 export default () => {
 
-  const api = Router();
+  const api = express.Router();
 
   // get current users object endpoint - GET "/v1/users/@me"
-  api.get("/@me", authenticate, async (req:any, res) => {
+  api.get("/@me", authenticate, async (req:IReq, res:express.Response) => {
 
     try {
 
@@ -102,7 +105,7 @@ export default () => {
   });
 
   // edit username endpoint - PUT "/v1/users/@me/edit/username"
-  api.put("/@me/edit/username", authenticate, async (req:any, res) => {
+  api.put("/@me/edit/username", authenticate, async (req:IReq, res:express.Response) => {
 
     if (req.grant_type == "password") {
 
@@ -166,7 +169,7 @@ export default () => {
   });
 
   // change password endpoint - PUT "/v1/users/@me/edit/password"
-  api.put("/@me/edit/password", authenticate, async (req:any, res) => {
+  api.put("/@me/edit/password", authenticate, async (req:IReq, res:express.Response) => {
 
     const {error} = editPasswordSchema.validate(req.body);
     
@@ -242,7 +245,7 @@ export default () => {
   });
 
   // add/update phone number - PUT "/v1/users/@me/edit/phone"
-  api.put("/@me/edit/phone", authenticate, async (req:any, res) => {
+  api.put("/@me/edit/phone", authenticate, async (req:IReq, res:express.Response) => {
 
     const {error} = editPhoneNumberSchema.validate(req.body);
 
@@ -277,7 +280,7 @@ export default () => {
   });
 
   // create and send otp to phone - POST "/v1/users/@me/otp/gen"
-  api.post("/@me/otp/gen", authenticate, async (req:any, res) => {
+  api.post("/@me/otp/gen", authenticate, async (req:IReq, res:express.Response) => {
 
     const {error} = genOtpSchema.validate(req.body);
 
@@ -320,7 +323,7 @@ export default () => {
   });
 
   // update email endpoint - PUT "/v1/users/@me/edit/email"
-  api.put("/@me/edit/email", authenticate, async (req:any, res) => {
+  api.put("/@me/edit/email", authenticate, async (req:IReq, res:express.Response) => {
 
     if (req.grant_type == "password") {
 
@@ -380,7 +383,7 @@ export default () => {
   });
 
   // generate 2fa secret endpoint - GET "/v1/users/@me/2fa/generate"
-  api.get("/@me/2fa/generate", authenticate, async (req:any, res) => {
+  api.get("/@me/2fa/generate", authenticate, async (req:IReq, res:express.Response) => {
 
     if (req.grant_type == "password") {
 
@@ -413,7 +416,7 @@ export default () => {
   });
 
   // enable 2fa endpoint - PUT "/v1/users/@me/2fa/enable"
-  api.put("/@me/2fa/enable", authenticate, async (req:any, res) => {
+  api.put("/@me/2fa/enable", authenticate, async (req:IReq, res:express.Response) => {
 
     if (req.grant_type == "password") {
 

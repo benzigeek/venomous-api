@@ -15,11 +15,8 @@
 import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
-interface IChannelMod extends mongoose.Document {
-  username: string,
-  channel: string,
-  id: string
-}
+// import types
+import { IChannelMod } from '../types';
 
 const ChannelMod = new Schema({
   username: {type: String, required: true},

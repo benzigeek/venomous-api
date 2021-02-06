@@ -13,7 +13,7 @@
 */
 
 // import thirdparty packages
-import { response, Router } from 'express';
+import express from 'express';
 import Joi from 'joi';
 import logger from 'jethro';
 import argon2 from 'argon2';
@@ -37,14 +37,17 @@ import recoverycode from '../models/recoverycode';
 // import middleware
 import { authenticate } from '../middleware';
 
+// import types
+import { IReq } from '../types';
+
 const twiCli = twilio(config.get("twilio.sid"), config.get("twilio.token"));
 
 export default () => {
 
-  const api = Router();
+  const api = express.Router();
 
   // register endpoint - POST "/v1/auth/register"
-  api.post("/register", async (req, res) => {
+  api.post("/register", async (req:IReq, res:express.Response) => {
 
     const {error} = registerSchema.validate(req.body);
 
@@ -101,7 +104,7 @@ export default () => {
   });
 
   // login endpoint - POST "/v1/auth/login"
-  api.post("/login", async (req:any, res) => {
+  api.post("/login", async (req:IReq, res:express.Response) => {
 
     const {error} = loginSchema.validate(req.body);
 
@@ -159,7 +162,7 @@ export default () => {
   });
 
   // generate otp codes with sms
-  api.post("/otp/gen", async (req, res) => {
+  api.post("/otp/gen", async (req:IReq, res:express.Response) => {
 
     const {error} = OTPSchema.validate(req.body);
 
@@ -202,7 +205,7 @@ export default () => {
   });
 
   // verify otp codes - POST "/v1/auth/login/otp"
-  api.post("/login/otp", async (req, res) => {
+  api.post("/login/otp", async (req:IReq, res:express.Response) => {
 
     const {error} = loginOtpSchema.validate(req.body);
 
@@ -289,7 +292,7 @@ export default () => {
   });
 
   // refresh endpoint - POST "/v1/auth/refresh"
-  api.post("/refresh", async (req, res) => {
+  api.post("/refresh", async (req:IReq, res:express.Response) => {
 
     const {error} = refreshSchema.validate(req.body);
 
@@ -323,7 +326,7 @@ export default () => {
   });
 
   // resend email endpoint - POST "/v1/auth/resend"
-  api.post("/resend", authenticate, async (req:any, res) => {
+  api.post("/resend", authenticate, async (req:IReq, res:express.Response) => {
 
     if (req.grant_type == "password") {
 
@@ -359,7 +362,7 @@ export default () => {
   });
 
   // logout endpoint - GET "/v1/auth/logout"
-  api.get("/logout", authenticate, async (req:any, res) => {
+  api.get("/logout", authenticate, async (req:IReq, res:express.Response) => {
 
     try {
 
@@ -376,7 +379,7 @@ export default () => {
   });
 
   // verify email endpoint - PUT "/v1/auth/verify"
-  api.put("/verify", authenticate, async (req:any, res) => {
+  api.put("/verify", authenticate, async (req:IReq, res:express.Response) => {
 
     const {error} = verifySchema.validate(req.body);
 

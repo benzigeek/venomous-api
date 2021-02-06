@@ -15,19 +15,8 @@
 import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
-interface IUser extends mongoose.Document {
-  id: string,
-  email: string,
-  username: string,
-  hash: string,
-  staff: boolean,
-  created: Date,
-  username_time: number,
-  email_verified: boolean,
-  two_factor: boolean,
-  two_factor_secret: string,
-  phone_number: string
-}
+// import types
+import { IUser } from '../types';
 
 const User = new Schema({
   username: {type: String, required: true},
