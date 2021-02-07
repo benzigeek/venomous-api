@@ -463,6 +463,61 @@ export default () => {
 
   });
 
+  // disable 2fa endpoint - DELETE "/v1/users/@me/2fa/disable"
+  api.delete("/@me/2fa/disable", authenticate, async (req:IReq, res:express.Response) => {
+
+    if (req.grant_type == "password") {
+
+      const {error} = disable2faSchema.validate(req.body);
+
+      if (error) return res.status(400).json({"statusCode":400,"error":error.details[0].message});
+
+      const user = await User.findOne({_id: req.id});
+
+      if (user.two_factor == false) return res.status(400).json({"statusCode":400,"error":"2fa not enabled"});
+
+      const recoverycode = await RecoveryCode.findOne({code: req.body.code, id: req.id});
+
+      if (recoverycode) {
+
+        user.two_factor = false;
+
+        await user.save();
+
+        await RecoveryCode.deleteMany({id: req.id});
+
+        res.status(200).json({"statusCode":200,"message":"Diabled 2fa"});
+
+      } else {
+
+        const verified = await speakeasy.totp.verify({
+          secret: user.two_factor_secret,
+          encoding: "base32",
+          token: req.body.code,
+          window: 0
+        });
+
+        if (!verified) res.status(400).json({"statusCode":400,"error":"Invalid Code"});
+
+        user.two_factor = false;
+
+        await user.save();
+
+        await RecoveryCode.deleteMany({id: req.id});
+
+        res.status(200).json({"statusCode":200,"message":"Diabled 2fa"});
+
+      }
+
+
+    } else {
+
+      res.status(403).json({"statusCode":403,"error":"Forbidden"});
+
+    }
+
+  });
+
   return api;
 
 }
@@ -605,5 +660,10 @@ const genOtpSchema = Joi.object({
 
 // edit phone number request schema
 const editPhoneNumberSchema = Joi.object({
+  code: Joi.string().required()
+});
+
+// disable 2fa request schema
+const disable2faSchema = Joi.object({
   code: Joi.string().required()
 });
