@@ -174,25 +174,35 @@ export default () => {
 
       if (!gateway) return res.status(400).json({"statusCode": 400,"error": "Invalid Gateway"});
 
-      const otp = await otpGen.generate(6, { alphabets: false, digits: true, upperCase: false, specialChars: false });
-
       const user = await User.findOne({_id: gateway.id});
 
-      const newOTP = new OTP({
-        otp,
-        id: gateway.id,
-        phone_number: user.phone_number
-      });
+      if (!user.sms_auth) return res.status(400).json({"statusCode":400,"error":"sms not enabled"});
 
-      await newOTP.save();
+      if (user.phone_number) {
 
-      await twiCli.messages.create({
-        "body": `Your Venomous Verification code is: ${otp}`,
-        "from": config.get("phone"),
-        "to": user.phone_number
-      });
+        const otp = await otpGen.generate(6, { alphabets: false, digits: true, upperCase: false, specialChars: false });
 
-      res.status(200).json({"statusCode": 200,"message": "Sent Message"});
+        const newOTP = new OTP({
+          otp,
+          id: gateway.id,
+          phone_number: user.phone_number
+        });
+  
+        await newOTP.save();
+  
+        await twiCli.messages.create({
+          "body": `Your Venomous Verification code is: ${otp}`,
+          "from": config.get("phone"),
+          "to": user.phone_number
+        });
+  
+        res.status(200).json({"statusCode": 200,"message": "Sent Message"});
+
+      } else {
+
+        res.status(400).json({"statusCode":400,"error":"No phone number added"});
+
+      }
 
     } catch (err) {
 
@@ -239,9 +249,9 @@ export default () => {
 
         const otp = await OTP.findOne({otp: req.body.code, id: gateway.id});
 
-        if (!otp) {
+        const user = await User.findOne({id: gateway.id});
 
-          const user = await User.findOne({id: gateway.id});
+        if (!otp) {
   
           const verify = speakeasy.totp.verify({
             secret: user.two_factor_secret,
@@ -264,6 +274,8 @@ export default () => {
           });
   
         } else {
+
+          if (!user.sms_auth) return res.status(400).json({"statusCode":400,"error":"sms not enabled"});
   
           await OTP.deleteMany({id: gateway.id});
   
