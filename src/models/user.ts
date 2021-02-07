@@ -28,7 +28,8 @@ const User = new Schema({
   email_verifed: {type: Boolean, default: false},
   two_factor: {type: Boolean, default: false},
   two_factor_secret: {type: String, default: null},
-  phone_number: {type: String, default: null}
+  phone_number: {type: String, default: null},
+  sms_auth: {type: Boolean, default: false}
 });
 
 User.method("toClient", () => {

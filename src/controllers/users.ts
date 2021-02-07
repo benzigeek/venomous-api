@@ -518,6 +518,56 @@ export default () => {
 
   });
 
+  // enable sms auth - PUT "/v1/users/@me/sms/enable"
+  api.put("/@me/sms/enable", authenticate, async (req:IReq, res:express.Response) => {
+
+    if (req.grant_type == "password") {
+
+      const user = await User.findOne({_id: req.id});
+
+      if (user.phone_number && user.sms_auth == false) {
+
+        user.sms_auth = true;
+
+        await user.save();
+
+        res.status(200).json({"statusCode": 200,"message": "successfully enabled sms auth"});
+
+      }
+
+    } else {
+
+      res.status(403).json({"statusCode":403,"error":"Forbidden"});
+
+    }
+
+  });
+
+  // disable sms auth - PUT "/v1/users/@me/sms/disable"
+  api.put("/@me/sms/disable", authenticate, async (req:IReq, res:express.Response) => {
+
+    if (req.grant_type == "password") {
+
+      const user = await User.findOne({_id: req.id});
+
+      if (user.phone_number && user.sms_auth == true) {
+
+        user.sms_auth = false;
+
+        await user.save();
+
+        res.status(200).json({"statusCode": 200,"message": "successfully disabled sms auth"});
+
+      }
+
+    } else {
+
+      res.status(403).json({"statusCode":403,"error":"Forbidden"});
+
+    }
+
+  });
+
   return api;
 
 }

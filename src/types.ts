@@ -36,7 +36,8 @@ interface IUser extends mongoose.Document {
   email_verified: boolean,
   two_factor: boolean,
   two_factor_secret: string,
-  phone_number: string
+  phone_number: string,
+  sms_auth: boolean
 }
 
 // AuthToken type
