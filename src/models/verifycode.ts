@@ -19,7 +19,7 @@ const Schema = mongoose.Schema;
 import { IVerifyCode } from '../types';
 
 const VerifyCode = new Schema({
-  code: {type: String, required: true},
+  code: {type: String, required: true, unique: true},
   id: {type: String, required: true},
   createdAt: { type: Date, expires: 3600, default: Date.now }
 });
