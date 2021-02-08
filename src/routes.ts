@@ -21,6 +21,7 @@ import Auth from './controllers/auth';
 import Users from './controllers/users';
 import Channels from './controllers/channels';
 import Games from './controllers/games';
+import Search from './controllers/search';
 
 let router = express();
 
@@ -31,6 +32,7 @@ const initDB = async () => {
   router.use("/users", Users());
   router.use("/channels", Channels());
   router.use("/games", Games());
+  router.use("/search", Search());
   
 }
 
