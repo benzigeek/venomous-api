@@ -111,6 +111,14 @@ interface IVerifyCode extends mongoose.Document {
   id: string
 }
 
+// game type
+interface IGame extends mongoose.Document {
+  id: string,
+  name: string,
+  img: string,
+  viewers: number
+}
+
 export {
   IReq,
   IAuthToken,
@@ -122,5 +130,6 @@ export {
   IOTPGateway,
   IRecoveryCode,
   IRefreashToken,
-  IVerifyCode
+  IVerifyCode,
+  IGame
 }

@@ -19,7 +19,7 @@ const Schema = mongoose.Schema;
 import { IOTPGateway } from '../types';
 
 const OTPGateway = new Schema({
-  gateway_token: {type: String, required: true},
+  gateway_token: {type: String, required: true, uniqe: true},
   id: {type: String, required: true},
   createdAt: { type: Date, expires: 300, default: Date.now }
 });

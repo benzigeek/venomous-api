@@ -20,7 +20,7 @@ import { IAuthToken } from '../types';
 
 const AuthToken = new Schema({
   id: {type: String, required: true},
-  token: {type: String, required: true},
+  token: {type: String, required: true, uniqe: true},
   client_id: {type: String, defaut: false},
   grant_type: {type: String, required: true},
   scope: [{

@@ -11,22 +11,26 @@
 * Repo: github.com/benzigeek/venomous-api
 * Copyright (c) 2021 Jordan (benzigeek)
 */
-
 import mongoose from 'mongoose';
 const Schema = mongoose.Schema;
 
 // import types
-import { IRefreashToken } from '../types'
+import { IGame } from '../types';
 
-const RefreshToken = new Schema({
-  token: {type: String, required: true, uniqe: true},
-  id: {type: String, required: true},
-  client_id: {type: String, defaut: false},
-  grant_type: {type: String, required: true},
-  scope: [{
-    type: String, required: true
-  }],
-  createdAt: { type: Date, expires: 31556952, default: Date.now }
+const Game = new Schema({
+  name: {type: String, required: true, uniqe: true},
+  img: {type: String, required: true},
+  viewers: {type: Number, default: 0}
 });
 
-export default mongoose.model<IRefreashToken>("refreshtokens", RefreshToken);
+Game.method("toClient", () => {
+  
+  // @ts-ignore
+  let obj = this.toObject();
+
+  obj.id = obj._id;
+  delete obj._id; 
+  
+});
+
+export default mongoose.model<IGame>("games", Game);
